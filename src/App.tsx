@@ -5,6 +5,7 @@ import { HeroBackground, HeroForeground } from './components/Hero';
 import { WaveSystem } from './components/WaveSystem';
 import { Lightbox } from './components/Lightbox';
 import { SettingsPanel, ScrollSettings } from './components/SettingsPanel';
+import { CodeExportModal } from './components/CodeExportModal';
 import { IMAGES, PortfolioImage, WAVE_CONFIG } from './constants';
 
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
   const [gridVisible, setGridVisible] = useState(false);
   const [waveStart, setWaveStart] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [scrollSettings, setScrollSettings] = useState<ScrollSettings>(WAVE_CONFIG);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -64,6 +66,7 @@ export default function App() {
       <BackgroundGrid visible={gridVisible} />
       <Navbar 
         onSettingsClick={() => setIsSettingsOpen(true)}
+        onExportClick={() => setIsExportOpen(true)}
       />
       
       <HeroBackground introFinished={introFinished} />
@@ -83,6 +86,12 @@ export default function App() {
         settings={scrollSettings}
         onSettingsChange={setScrollSettings}
         onReset={() => setScrollSettings(WAVE_CONFIG)}
+      />
+
+      <CodeExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        settings={scrollSettings}
       />
       
       <Lightbox 
