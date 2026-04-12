@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import { motion } from 'motion/react';
 import { PortfolioImage } from '../constants';
 import { cn } from '../lib/utils';
 
@@ -36,7 +37,8 @@ export const WaveItem = forwardRef<HTMLDivElement, WaveItemProps>(({
       onMouseEnter={() => onHover(image.id)}
       onMouseLeave={() => onHover(null)}
     >
-      <div 
+      <motion.div 
+        layoutId={`image-${image.id}`}
         className={cn(
           "relative w-full h-full overflow-hidden rounded-sm shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
           isHovered ? "shadow-[0_40px_80px_rgba(0,0,0,0.8)] ring-1 ring-foreground/30 scale-105" : "shadow-lg"
@@ -54,7 +56,7 @@ export const WaveItem = forwardRef<HTMLDivElement, WaveItemProps>(({
           }}
           referrerPolicy="no-referrer"
         />
-      </div>
+      </motion.div>
     </div>
   );
 });

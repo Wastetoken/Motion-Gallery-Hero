@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { BackgroundGrid } from './components/BackgroundGrid';
 import { Navbar } from './components/Navbar';
 import { HeroBackground, HeroForeground } from './components/Hero';
@@ -54,22 +55,31 @@ export default function App() {
 
   return (
     <div className={`relative w-full h-screen overflow-hidden font-sans selection:bg-foreground selection:text-background bg-background text-foreground`}>
-      <BackgroundGrid visible={gridVisible && showGrid} />
-      <Navbar 
-        onSettingsClick={() => setIsSettingsOpen(true)}
-        onExportClick={() => setIsExportOpen(true)}
-      />
-      
-      <HeroBackground introFinished={introFinished} />
+      <motion.div
+        animate={{
+          filter: selectedImage ? 'blur(8px)' : 'blur(0px)',
+          scale: selectedImage ? 0.98 : 1,
+        }}
+        transition={{ duration: 0.5, ease: "circOut" }}
+        className="w-full h-full"
+      >
+        <BackgroundGrid visible={gridVisible && showGrid} />
+        <Navbar 
+          onSettingsClick={() => setIsSettingsOpen(true)}
+          onExportClick={() => setIsExportOpen(true)}
+        />
+        
+        <HeroBackground introFinished={introFinished} />
 
-      <WaveSystem 
-        onImageClick={setSelectedImage} 
-        onIntroFinish={() => setIntroFinished(true)}
-        startIntro={waveStart}
-        settings={scrollSettings}
-      />
-      
-      <HeroForeground introFinished={introFinished} />
+        <WaveSystem 
+          onImageClick={setSelectedImage} 
+          onIntroFinish={() => setIntroFinished(true)}
+          startIntro={waveStart}
+          settings={scrollSettings}
+        />
+        
+        <HeroForeground introFinished={introFinished} />
+      </motion.div>
 
       <SettingsPanel
         isOpen={isSettingsOpen}

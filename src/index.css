@@ -41,7 +41,7 @@
   }
 }
 
-/* View Transitions */
+/* View Transitions - Circular Reveal */
 html {
   view-transition-name: root;
 }
@@ -50,17 +50,5 @@ html {
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
-}
-
-::view-transition-old(root) {
-  z-index: 1;
-}
-
-::view-transition-new(root) {
-  z-index: 2147483647;
-}
-
-/* Disable all transitions during view transition to prevent flickering */
-::view-transition-group(root) {
-  animation-duration: 0.7s;
+  display: block;
 }

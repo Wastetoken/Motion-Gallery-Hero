@@ -23,6 +23,7 @@ export const WaveSystem: React.FC<WaveSystemProps> = ({ onImageClick, onIntroFin
   const isClickCandidate = useRef(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const lastDragX = useRef(0);
+  const clickedItemId = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -120,8 +121,10 @@ export const WaveSystem: React.FC<WaveSystemProps> = ({ onImageClick, onIntroFin
 
         const renderScale = isHovered ? scale * 1.6 : scale;
         const rotation = isHovered ? (index % 2 === 0 ? 4 : -4) : (baseRotation + explosionFactor * (index % 2 === 0 ? 45 : -45));
+        const blur = isHovered ? 0 : safeDist * 8;
 
         el.style.transform = `translate3d(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px), 0) scale(${renderScale}) rotate(${rotation}deg)`;
+        el.style.filter = blur > 0.5 ? `blur(${blur}px)` : 'none';
         el.style.zIndex = isHovered ? "1000" : zIndex.toString();
       });
 
@@ -150,6 +153,11 @@ export const WaveSystem: React.FC<WaveSystemProps> = ({ onImageClick, onIntroFin
     lastDragX.current = e.clientX;
     velocity.current = 0;
     
+    // Identify the item being clicked
+    const target = e.target as HTMLElement;
+    const itemElement = target.closest('[data-wave-item]');
+    clickedItemId.current = itemElement?.getAttribute('data-id') || null;
+    
     // On mobile, clear hover if we start dragging
     if (e.pointerType === 'touch') {
       // setHoveredId(null); // Don't clear yet, might be a tap
@@ -170,27 +178,24 @@ export const WaveSystem: React.FC<WaveSystemProps> = ({ onImageClick, onIntroFin
   }, [settings.dragSensitivity]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (isClickCandidate.current) {
-      // Find the item under the pointer manually if hoveredId is unreliable on mobile
-      const target = e.target as HTMLElement;
-      const itemElement = target.closest('[data-wave-item]');
-      const id = itemElement?.getAttribute('data-id');
+    if (isClickCandidate.current && clickedItemId.current) {
+      const id = clickedItemId.current;
+      const img = IMAGES.find(i => i.id === id);
       
-      if (id) {
-        const img = IMAGES.find(i => i.id === id);
-        if (img) {
-          // On mobile, if it's not hovered, hover it first. If already hovered, open it.
-          // This gives a nice "inspect" feel.
-          if (e.pointerType === 'touch' && hoveredId !== id) {
-            setHoveredId(id);
-          } else {
-            onImageClick(img);
-          }
+      if (img) {
+        // On mobile, if it's not hovered, hover it first. If already hovered, open it.
+        // This gives a nice "inspect" feel.
+        if (e.pointerType === 'touch' && hoveredId !== id) {
+          setHoveredId(id);
+        } else {
+          onImageClick(img);
         }
-      } else {
-        setHoveredId(null);
       }
+    } else if (isClickCandidate.current) {
+      setHoveredId(null);
     }
+    
+    clickedItemId.current = null;
     isDragging.current = false;
     isClickCandidate.current = false;
     containerRef.current?.releasePointerCapture(e.pointerId);

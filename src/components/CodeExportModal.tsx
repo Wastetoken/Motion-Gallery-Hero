@@ -242,22 +242,75 @@ const WaveItem = forwardRef(({ image, isHovered, onHover, introProgress }: any, 
 ));
 
 const Lightbox = ({ image, isOpen, onClose, onPrev, onNext }: any) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    let lastScrollTime = 0;
+    const scrollThreshold = 500;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') onPrev();
+      if (e.key === 'ArrowRight') onNext();
+    };
+    const handleWheel = (e: WheelEvent) => {
+      const now = Date.now();
+      if (now - lastScrollTime < scrollThreshold) return;
+      if (Math.abs(e.deltaY) > 10) {
+        if (e.deltaY > 0) onNext();
+        else onPrev();
+        lastScrollTime = now;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [isOpen, onClose, onPrev, onNext]);
+
   if (!image) return null;
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[5000] bg-background/95 backdrop-blur-3xl flex items-center justify-center"
+          className="fixed inset-0 z-[5000] flex items-center justify-center overflow-hidden"
           onClick={onClose}
         >
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(12)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0 }}
+                animate={{ 
+                  x: [Math.random() * 1000, Math.random() * 1000],
+                  y: [Math.random() * 1000, Math.random() * 1000],
+                  opacity: [0, 0.1, 0],
+                }}
+                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                className="absolute w-64 h-64 rounded-full bg-foreground/5 blur-[80px]"
+              />
+            ))}
+          </div>
           <div className="relative w-full h-full flex items-center justify-center p-4 md:p-12" onClick={(e) => e.stopPropagation()}>
-            <button onClick={onClose} className="absolute top-6 right-6 md:top-8 md:right-8 w-12 h-12 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors z-[5001] bg-foreground/5 rounded-full backdrop-blur-md"><Icon name="x" size={24} /></button>
-            <button onClick={onPrev} className="absolute left-2 md:left-8 w-12 h-24 flex items-center justify-center text-foreground/20 hover:text-foreground transition-colors z-[5001]"><Icon name="chevron-left" size={32} /></button>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative max-w-5xl w-full aspect-[3/2] rounded-lg overflow-hidden shadow-2xl">
-              <img src={image.url} alt={image.title} className="w-full h-full object-cover" />
-            </motion.div>
-            <button onClick={onNext} className="absolute right-2 md:right-8 w-12 h-24 flex items-center justify-center text-foreground/20 hover:text-foreground transition-colors z-[5001]"><Icon name="chevron-right" size={32} /></button>
+            <div className="absolute top-6 right-6 md:top-8 md:right-8 flex items-center gap-4 z-[5001]">
+              <button onClick={onClose} className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded-full backdrop-blur-md border border-foreground/10 transition-all">
+                <span className="text-[10px] uppercase tracking-widest font-bold">Collapse</span>
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+            <button onClick={onPrev} className="absolute left-4 md:left-12 w-14 h-14 flex items-center justify-center text-foreground/30 hover:text-foreground transition-all z-[5001] bg-foreground/5 rounded-full"><Icon name="chevron-left" size={32} /></button>
+            <div className="relative w-full h-full flex flex-col items-center justify-center max-w-7xl mx-auto">
+              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative group">
+                <img src={image.url} alt={image.title} className="max-w-full max-h-[75vh] md:max-h-[80vh] object-contain rounded-sm shadow-[0_80px_150px_rgba(0,0,0,0.8)]" />
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-10 text-center">
+                <h2 className="text-foreground text-3xl md:text-5xl font-serif italic tracking-tight">{image.title}</h2>
+                <p className="text-foreground/40 text-[10px] md:text-[12px] uppercase tracking-[0.4em] font-bold mt-4">{image.category} — {image.year}</p>
+              </motion.div>
+            </div>
+            <button onClick={onNext} className="absolute right-4 md:right-12 w-14 h-14 flex items-center justify-center text-foreground/30 hover:text-foreground transition-all z-[5001] bg-foreground/5 rounded-full"><Icon name="chevron-right" size={32} /></button>
           </div>
         </motion.div>
       )}
@@ -467,11 +520,20 @@ export default function App() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background text-foreground font-sans selection:bg-foreground selection:text-background">
-      <BackgroundGrid visible={showGrid} />
-      <Navbar onSettingsClick={() => setIsSettingsOpen(true)} />
-      <HeroLayout introFinished={introFinished} layer="bg" />
-      <WaveSystem settings={scrollSettings} onImageClick={setSelectedImage} hoveredId={hoveredId} setHoveredId={setHoveredId} />
-      <HeroLayout introFinished={introFinished} layer="fg" />
+      <motion.div
+        animate={{
+          filter: selectedImage ? 'blur(8px)' : 'blur(0px)',
+          scale: selectedImage ? 0.98 : 1,
+        }}
+        transition={{ duration: 0.5 }}
+        className="w-full h-full"
+      >
+        <BackgroundGrid visible={showGrid} />
+        <Navbar onSettingsClick={() => setIsSettingsOpen(true)} />
+        <HeroLayout introFinished={introFinished} layer="bg" />
+        <WaveSystem settings={scrollSettings} onImageClick={setSelectedImage} hoveredId={hoveredId} setHoveredId={setHoveredId} />
+        <HeroLayout introFinished={introFinished} layer="fg" />
+      </motion.div>
       <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} settings={scrollSettings} onSettingsChange={setScrollSettings} onReset={() => setScrollSettings(${JSON.stringify(settings, null, 2)})} showGrid={showGrid} onGridToggle={() => setShowGrid(!showGrid)} />
       <Lightbox image={selectedImage} isOpen={!!selectedImage} onClose={() => setSelectedImage(null)} onPrev={handlePrev} onNext={handleNext} />
       <div className="fixed bottom-6 left-6 md:bottom-8 md:right-8 md:left-auto z-[1000] flex items-center gap-4 text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-foreground/20 font-bold">
