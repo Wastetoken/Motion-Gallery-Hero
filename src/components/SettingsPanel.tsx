@@ -20,6 +20,8 @@ interface SettingsPanelProps {
   settings: ScrollSettings;
   onSettingsChange: (settings: ScrollSettings) => void;
   onReset: () => void;
+  showGrid: boolean;
+  onGridToggle: () => void;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -28,6 +30,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   settings,
   onSettingsChange,
   onReset,
+  showGrid,
+  onGridToggle,
 }) => {
   const handleChange = (key: keyof ScrollSettings, value: number) => {
     onSettingsChange({ ...settings, [key]: value });
@@ -41,28 +45,41 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed top-0 right-0 bottom-0 w-80 bg-background/80 backdrop-blur-2xl border-l border-foreground/10 z-[2000] p-8 flex flex-col gap-8 pointer-events-auto"
+          className="fixed top-0 right-0 h-[100dvh] w-full sm:w-80 bg-background/90 backdrop-blur-3xl border-l border-foreground/10 z-[2000] p-6 md:p-8 flex flex-col gap-8 pointer-events-auto shadow-[-20px_0_50px_rgba(0,0,0,0.2)]"
         >
           <div className="flex items-center justify-between">
             <h2 className="text-foreground text-xs uppercase tracking-[0.3em] font-bold">Gallery Settings</h2>
             <div className="flex items-center gap-4">
               <button
                 onClick={onReset}
-                className="text-foreground/30 hover:text-foreground transition-colors"
+                className="w-10 h-10 flex items-center justify-center text-foreground/30 hover:text-foreground transition-colors active:scale-90"
                 title="Reset to Default"
               >
                 <RotateCcw size={16} />
               </button>
               <button
                 onClick={onClose}
-                className="text-foreground/30 hover:text-foreground transition-colors"
+                className="w-10 h-10 flex items-center justify-center text-foreground/30 hover:text-foreground transition-colors active:scale-90"
               >
                 <X size={20} />
               </button>
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="flex flex-col gap-8 overflow-y-auto pr-2 custom-scrollbar pb-24">
+            <div className="space-y-6">
+              <h3 className="text-foreground/20 text-[8px] uppercase tracking-[0.4em] font-bold border-b border-foreground/5 pb-2">Visuals</h3>
+              <div className="flex items-center justify-between">
+                <label className="text-foreground/40 text-[9px] uppercase tracking-widest font-bold">Background Grid</label>
+                <button 
+                  onClick={onGridToggle}
+                  className={`w-10 h-5 rounded-full transition-all duration-300 relative ${showGrid ? "bg-foreground" : "bg-foreground/10"}`}
+                >
+                  <div className={`absolute top-1 w-3 h-3 rounded-full transition-all duration-300 ${showGrid ? "right-1 bg-background" : "left-1 bg-foreground/40"}`} />
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-6">
               <h3 className="text-foreground/20 text-[8px] uppercase tracking-[0.4em] font-bold border-b border-foreground/5 pb-2">Movement</h3>
               <SettingSlider

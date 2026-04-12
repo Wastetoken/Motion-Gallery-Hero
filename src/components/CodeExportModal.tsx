@@ -15,79 +15,210 @@ export const CodeExportModal: React.FC<CodeExportModalProps> = ({ isOpen, onClos
 
   const generateTSX = () => {
     const isDark = document.documentElement.classList.contains('dark');
-    return `import React, { useEffect, useRef, useState, useCallback, forwardRef } from 'react';
+    return `import React, { useEffect, useRef, useState, useCallback, forwardRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings2, X, ChevronLeft, ChevronRight, RotateCcw, Sun, Moon } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import gsap from 'gsap';
 
 /**
  * FULL UI EXPORT - MOTION WAVE GALLERY
- * Includes: Navbar, Hero, Background Grid, Wave System, Lightbox, and Settings.
+ * This file contains the entire application UI, including:
+ * - Navbar with Theme Toggler & Export
+ * - Hero Section with staggered animations
+ * - Background Perspective Grid
+ * - Wave System with Sinusoidal Physics & Dispersion
+ * - Full Settings Panel
+ * - Lightbox System
  */
 
 // --- CONFIGURATION ---
-const CONFIG = ${JSON.stringify(settings, null, 2)};
 const IMAGES = ${JSON.stringify(IMAGES, null, 2)};
 
 // --- UTILS ---
-const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
+const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
+
+const Icon = ({ name, size = 20, className = "" }: { name: string, size?: number, className?: string }) => {
+  const iconRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    // @ts-ignore
+    if (typeof lucide !== 'undefined' && iconRef.current) {
+      // @ts-ignore
+      lucide.createIcons({
+        attrs: { 'stroke-width': 2, 'width': size, 'height': size, 'class': className },
+        nameAttr: 'data-lucide'
+      });
+    }
+  }, [name, size, className]);
+
+  // Fallback for React environment where lucide-react is imported
+  const LucideIcon = (Icons as any)[name.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')];
+  if (LucideIcon) return <LucideIcon size={size} className={className} />;
+
+  return <i data-lucide={name} ref={iconRef} className={className} style={{ width: size, height: size, display: 'inline-block' }}></i>;
+};
 
 // --- COMPONENTS ---
+
+const Navbar = ({ onSettingsClick, onExportClick }: any) => (
+  <nav className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-4 md:px-12 md:py-10 pointer-events-none">
+    <div className="flex items-center gap-4 md:gap-12 pointer-events-auto">
+      <a href="#" className="text-foreground font-bold text-lg md:text-xl tracking-tighter">Motion</a>
+    </div>
+    <div className="flex items-center gap-4 md:gap-8 pointer-events-auto">
+      <AnimatedThemeToggler />
+      {onExportClick && (
+        <button onClick={onExportClick} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-foreground/20 hover:text-foreground transition-all active:scale-90">
+          <Icon name="code" size={18} />
+        </button>
+      )}
+      <button onClick={onSettingsClick} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-foreground/20 hover:text-foreground transition-all active:scale-90">
+        <Icon name="settings-2" size={18} />
+      </button>
+    </div>
+  </nav>
+);
+
+const AnimatedThemeToggler = ({ className }: any) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return document.documentElement.classList.contains("dark");
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const syncTheme = () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      if (isDark !== darkMode) setDarkMode(isDark);
+    };
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [darkMode]);
+
+  const onToggle = async () => {
+    if (!buttonRef.current) return;
+    const toggle = () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      const next = !isDark;
+      document.documentElement.classList.toggle("dark", next);
+      localStorage.setItem("theme", next ? "dark" : "light");
+      setDarkMode(next);
+    };
+    // @ts-ignore
+    if (!document.startViewTransition) {
+      toggle();
+      return;
+    }
+    const { left, top, width, height } = buttonRef.current.getBoundingClientRect();
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+    const maxDistance = Math.hypot(Math.max(centerX, window.innerWidth - centerX), Math.max(centerY, window.innerHeight - centerY));
+    // @ts-ignore
+    const transition = document.startViewTransition(() => {
+      toggle();
+    });
+    await transition.ready;
+    document.documentElement.animate({
+      clipPath: [\`circle(0px at \${centerX}px \${centerY}px)\`, \`circle(\${maxDistance}px at \${centerX}px \${centerY}px)\`]
+    }, {
+      duration: 700,
+      easing: "ease-in-out",
+      pseudoElement: "::view-transition-new(root)"
+    });
+  };
+
+  return (
+    <button ref={buttonRef} onClick={onToggle} className={cn("flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full outline-none active:scale-90 transition-all duration-300", darkMode ? "bg-white/5 text-white/40 hover:text-white" : "bg-black/5 text-black/40 hover:text-black", className)}>
+      <AnimatePresence mode="wait" initial={false}>
+        {darkMode ? (
+          <motion.span key="sun" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}><Icon name="sun" size={18} /></motion.span>
+        ) : (
+          <motion.span key="moon" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}><Icon name="moon" size={18} /></motion.span>
+        )}
+      </AnimatePresence>
+    </button>
+  );
+};
 
 const BackgroundGrid = ({ visible }: { visible: boolean }) => (
   <motion.div 
     initial={{ opacity: 0 }}
     animate={{ opacity: visible ? 1 : 0 }}
-    transition={{ duration: 2 }}
-    className="fixed inset-0 z-[-1] overflow-hidden bg-background text-foreground transition-colors duration-700"
+    transition={{ duration: 2, ease: "easeInOut" }}
+    className="fixed inset-0 z-[-1] overflow-hidden bg-background"
   >
     <div 
-      className="absolute inset-[-20%] opacity-20"
+      className="absolute inset-[-50%] opacity-[0.15] dark:opacity-[0.2]"
       style={{
         backgroundImage: \`linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)\`,
-        backgroundSize: '100px 100px',
-        maskImage: 'radial-gradient(circle at center, black 20%, transparent 80%)',
-        WebkitMaskImage: 'radial-gradient(circle at center, black 20%, transparent 80%)',
-        transform: 'perspective(1200px) rotateX(15deg) scale(1.2)',
+        backgroundSize: '40px 40px',
+        maskImage: 'radial-gradient(circle at center, black 40%, transparent 90%)',
+        WebkitMaskImage: 'radial-gradient(circle at center, black 40%, transparent 90%)',
+        transform: 'perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px)',
+        color: 'rgb(var(--foreground))',
       }}
     />
-    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background" />
+    <div 
+      className="absolute inset-[-50%] opacity-[0.05] dark:opacity-[0.1]"
+      style={{
+        backgroundImage: \`linear-gradient(to right, currentColor 2px, transparent 2px), linear-gradient(to bottom, currentColor 2px, transparent 2px)\`,
+        backgroundSize: '200px 200px',
+        maskImage: 'radial-gradient(circle at center, black 50%, transparent 95%)',
+        WebkitMaskImage: 'radial-gradient(circle at center, black 50%, transparent 95%)',
+        transform: 'perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px)',
+        color: 'rgb(var(--foreground))',
+      }}
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/20" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,background_100%)]" />
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-foreground/5 blur-[120px] rounded-full pointer-events-none" />
   </motion.div>
 );
 
 const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: 'bg' | 'fg' }) => {
+  const isBg = layer === 'bg';
   const isFg = layer === 'fg';
   return (
-    <div className={\`fixed inset-0 pointer-events-none px-12 \${layer === 'bg' ? 'z-[5]' : 'z-[200]'}\`}>
-      <div className="absolute bottom-24 left-12 right-12 max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isFg ? 0.3 : 0, y: 0 }}
-          className="flex items-center gap-3 text-current text-[10px] uppercase tracking-[0.4em] font-bold mb-6"
-        >
-          <div className="w-8 h-[1px] bg-current opacity-20" />
-          <span>Selected Work 2018 — 2026</span>
-        </motion.div>
-        <h1 className="text-current text-[10vw] md:text-[8vw] font-serif leading-[0.82] tracking-tighter mb-10 whitespace-nowrap">
+    <div className={\`fixed inset-0 pointer-events-none px-6 md:px-12 \${isBg ? 'z-[5]' : 'z-[200]'}\`}>
+      <div className="absolute bottom-[12dvh] md:bottom-24 left-6 right-6 md:left-12 md:right-12 max-w-4xl">
+        <div className="mb-4 md:mb-6 overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isFg ? 0.3 : 0, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.8 }}
+            className="flex items-center gap-3 text-current text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-bold"
+          >
+            <div className="w-6 md:w-8 h-[1px] bg-current opacity-20" />
+            <span>Selected Work 2018 — 2026</span>
+          </motion.div>
+        </div>
+        <h1 className="text-current text-[14vw] md:text-[8vw] font-serif leading-[0.85] md:leading-[0.82] tracking-tighter mb-4 md:mb-10 whitespace-nowrap">
           <div className="overflow-hidden flex items-baseline">
-            <motion.span animate={{ opacity: isFg ? 1 : 0, y: 0 }} className="block mr-[0.2em]">Every</motion.span>
-            <motion.span animate={{ opacity: layer === 'bg' ? 1 : 0, y: 0 }} className="block">frame,</motion.span>
+            <motion.span animate={{ opacity: isFg ? 1 : 0, y: 0 }} transition={{ delay: 3.5 }} className="block mr-[0.2em]">Every</motion.span>
+            <motion.span animate={{ opacity: isBg ? 1 : 0, y: 0 }} transition={{ delay: 3.6 }} className="block">frame,</motion.span>
           </div>
           <div className="overflow-hidden flex items-baseline italic">
-            <motion.span animate={{ opacity: isFg ? 1 : 0, y: 0 }} className="block mr-[0.2em]">every</motion.span>
-            <motion.span animate={{ opacity: layer === 'bg' ? 1 : 0, y: 0 }} className="block">story.</motion.span>
+            <motion.span animate={{ opacity: isFg ? 1 : 0, y: 0 }} transition={{ delay: 3.8 }} className="block mr-[0.2em]">every</motion.span>
+            <motion.span animate={{ opacity: isBg ? 1 : 0, y: 0 }} transition={{ delay: 3.9 }} className="block">story.</motion.span>
           </div>
         </h1>
-        {introFinished && isFg && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-md">
-            <p className="text-current opacity-40 text-sm md:text-base leading-relaxed mb-10 font-medium">
-              Twelve years of editorial, fashion, and brand photography — one infinite reel.
-            </p>
-            <div className="flex items-center gap-8 pointer-events-auto">
-              <button className="px-10 py-5 bg-foreground text-background text-[10px] uppercase tracking-[0.2em] font-bold rounded-sm">Book a session</button>
-            </div>
-          </motion.div>
-        )}
+        <div className="max-w-md h-[140px] md:h-[160px] relative">
+          <AnimatePresence>
+            {introFinished && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: isFg ? 1 : 0, y: 0 }} className="absolute inset-0">
+                <p className="text-current opacity-40 text-xs md:text-base leading-relaxed mb-6 md:mb-10 font-medium">
+                  Twelve years of editorial, fashion, and brand photography — one infinite reel.
+                </p>
+                <div className="flex items-center gap-4 md:gap-8 pointer-events-auto">
+                  <button className="px-6 py-4 md:px-10 md:py-5 bg-foreground text-background text-[8px] md:text-[10px] uppercase tracking-[0.2em] font-bold rounded-sm">Book a session</button>
+                  <button className="text-foreground opacity-40 hover:opacity-100 text-[8px] md:text-[10px] uppercase tracking-[0.2em] font-bold transition-all underline underline-offset-8">View Archive</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
@@ -96,6 +227,8 @@ const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: '
 const WaveItem = forwardRef(({ image, isHovered, onHover, introProgress }: any, ref: any) => (
   <div
     ref={ref}
+    data-wave-item
+    data-id={image.id}
     className={cn("absolute top-1/2 left-1/2 cursor-pointer transition-shadow duration-700", isHovered && "z-[1000]")}
     style={{ opacity: introProgress, width: '60px', height: '90px' }}
     onMouseEnter={() => onHover(image.id)}
@@ -103,15 +236,155 @@ const WaveItem = forwardRef(({ image, isHovered, onHover, introProgress }: any, 
   >
     <div className={cn("relative w-full h-full overflow-hidden rounded-sm shadow-2xl transition-all duration-700", isHovered ? "ring-1 ring-foreground/30 scale-105" : "shadow-lg")}>
       <img src={image.url} alt={image.title} className={cn("w-full h-full object-cover transition-all duration-700", isHovered ? "scale-110" : "scale-100")} />
+      <div className={cn("absolute inset-0 bg-foreground/5 transition-opacity duration-700", isHovered ? "opacity-0" : "opacity-100")} />
     </div>
   </div>
 ));
 
-const WaveSystem = ({ onImageClick, settings }: any) => {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+const Lightbox = ({ image, isOpen, onClose, onPrev, onNext }: any) => {
+  if (!image) return null;
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[5000] bg-background/95 backdrop-blur-3xl flex items-center justify-center"
+          onClick={onClose}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-4 md:p-12" onClick={(e) => e.stopPropagation()}>
+            <button onClick={onClose} className="absolute top-6 right-6 md:top-8 md:right-8 w-12 h-12 flex items-center justify-center text-foreground/40 hover:text-foreground transition-colors z-[5001] bg-foreground/5 rounded-full backdrop-blur-md"><Icon name="x" size={24} /></button>
+            <button onClick={onPrev} className="absolute left-2 md:left-8 w-12 h-24 flex items-center justify-center text-foreground/20 hover:text-foreground transition-colors z-[5001]"><Icon name="chevron-left" size={32} /></button>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative max-w-5xl w-full aspect-[3/2] rounded-lg overflow-hidden shadow-2xl">
+              <img src={image.url} alt={image.title} className="w-full h-full object-cover" />
+            </motion.div>
+            <button onClick={onNext} className="absolute right-2 md:right-8 w-12 h-24 flex items-center justify-center text-foreground/20 hover:text-foreground transition-colors z-[5001]"><Icon name="chevron-right" size={32} /></button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+const SettingSlider = ({ label, value, min, max, step, onChange }: any) => (
+  <div className="flex flex-col gap-3">
+    <div className="flex justify-between items-center">
+      <label className="text-foreground/40 text-[9px] uppercase tracking-widest font-bold">{label}</label>
+      <span className="text-foreground font-mono text-[10px]">{value.toFixed(label.includes('Frequency') ? 4 : 1)}</span>
+    </div>
+    <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1 bg-foreground/10 rounded-full appearance-none cursor-pointer accent-foreground" />
+  </div>
+);
+
+const SettingsPanel = ({ isOpen, onClose, settings, onSettingsChange, onReset, showGrid, onGridToggle }: any) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed top-0 right-0 h-[100dvh] w-full sm:w-80 bg-background/90 backdrop-blur-3xl border-l border-foreground/10 z-[2000] p-6 md:p-8 flex flex-col gap-8 shadow-[-20px_0_50px_rgba(0,0,0,0.2)]">
+        <div className="flex items-center justify-between">
+          <h2 className="text-foreground text-xs uppercase tracking-[0.3em] font-bold">Settings</h2>
+          <div className="flex items-center gap-4">
+            <button onClick={onReset} className="w-10 h-10 flex items-center justify-center text-foreground/30 hover:text-foreground active:scale-90"><Icon name="rotate-ccw" size={16} /></button>
+            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center text-foreground/30 hover:text-foreground active:scale-90"><Icon name="x" size={20} /></button>
+          </div>
+        </div>
+        <div className="flex flex-col gap-8 overflow-y-auto pr-2 custom-scrollbar pb-24">
+          <div className="space-y-6">
+            <h3 className="text-foreground/20 text-[8px] uppercase tracking-[0.4em] font-bold border-b border-foreground/5 pb-2">Visuals</h3>
+            <div className="flex items-center justify-between">
+              <label className="text-foreground/40 text-[9px] uppercase tracking-widest font-bold">Background Grid</label>
+              <button 
+                onClick={onGridToggle}
+                className={\`w-10 h-5 rounded-full transition-all duration-300 relative \${showGrid ? "bg-foreground" : "bg-foreground/10"}\`}
+              >
+                <div className={\`absolute top-1 w-3 h-3 rounded-full transition-all duration-300 \${showGrid ? "right-1 bg-background" : "left-1 bg-foreground/40"}\`} />
+              </button>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <h3 className="text-foreground/20 text-[8px] uppercase tracking-[0.4em] font-bold border-b border-foreground/5 pb-2">Movement</h3>
+            <SettingSlider label="Wave Amplitude" value={settings.amplitude} min={0} max={400} step={1} onChange={(v: any) => onSettingsChange({...settings, amplitude: v})} />
+            <SettingSlider label="Wave Frequency" value={settings.frequency} min={0.0001} max={0.01} step={0.0001} onChange={(v: any) => onSettingsChange({...settings, frequency: v})} />
+            <SettingSlider label="Item Spacing" value={settings.spacing} min={20} max={200} step={1} onChange={(v: any) => onSettingsChange({...settings, spacing: v})} />
+          </div>
+          <div className="space-y-6">
+            <h3 className="text-foreground/20 text-[8px] uppercase tracking-[0.4em] font-bold border-b border-foreground/5 pb-2">Physics</h3>
+            <SettingSlider label="Scroll Sensitivity" value={settings.scrollSensitivity} min={0.1} max={5} step={0.1} onChange={(v: any) => onSettingsChange({...settings, scrollSensitivity: v})} />
+            <SettingSlider label="Drag Sensitivity" value={settings.dragSensitivity} min={0.1} max={5} step={0.1} onChange={(v: any) => onSettingsChange({...settings, dragSensitivity: v})} />
+            <SettingSlider label="Inertia Decay" value={settings.inertiaDecay} min={0.8} max={0.99} step={0.01} onChange={(v: any) => onSettingsChange({...settings, inertiaDecay: v})} />
+          </div>
+          <div className="space-y-6">
+            <h3 className="text-foreground/20 text-[8px] uppercase tracking-[0.4em] font-bold border-b border-foreground/5 pb-2">Disperse</h3>
+            <SettingSlider label="Disperse Radius" value={settings.disperseRadius} min={50} max={800} step={10} onChange={(v: any) => onSettingsChange({...settings, disperseRadius: v})} />
+            <SettingSlider label="Disperse Strength" value={settings.disperseStrength} min={0} max={600} step={10} onChange={(v: any) => onSettingsChange({...settings, disperseStrength: v})} />
+            <SettingSlider label="Disperse Ratio" value={settings.disperseRatio} min={0} max={1} step={0.01} onChange={(v: any) => onSettingsChange({...settings, disperseRatio: v})} />
+          </div>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) => {
+  const [introProgress, setIntroProgress] = useState(0);
   const currentPosX = useRef(0);
   const velocity = useRef(0);
+  const isDragging = useRef(false);
+  const isClickCandidate = useRef(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const lastDragX = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    gsap.to({ val: 0 }, { val: 1, duration: 2.5, delay: 1, ease: "power4.out", onUpdate: function() { setIntroProgress(this.targets()[0].val); } });
+  }, []);
+
+  const handlePointerDown = (e: any) => {
+    isDragging.current = true;
+    isClickCandidate.current = true;
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    lastDragX.current = e.clientX;
+    velocity.current = 0;
+    containerRef.current?.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: any) => {
+    if (!isDragging.current) return;
+    const dist = Math.hypot(e.clientX - dragStartPos.current.x, e.clientY - dragStartPos.current.y);
+    if (dist > 10) isClickCandidate.current = false;
+    const deltaX = e.clientX - lastDragX.current;
+    lastDragX.current = e.clientX;
+    currentPosX.current -= deltaX * settings.dragSensitivity;
+    velocity.current = -deltaX * settings.dragSensitivity;
+  };
+
+  const handlePointerUp = (e: any) => {
+    if (isClickCandidate.current) {
+      const target = e.target as HTMLElement;
+      const itemElement = target.closest('[data-wave-item]');
+      const id = itemElement?.getAttribute('data-id');
+      if (id) {
+        const img = IMAGES.find(i => i.id === id);
+        if (img) {
+          if (e.pointerType === 'touch' && hoveredId !== id) {
+            setHoveredId(id);
+          } else {
+            onImageClick(img);
+          }
+        }
+      } else {
+        setHoveredId(null);
+      }
+    }
+    isDragging.current = false;
+    isClickCandidate.current = false;
+    containerRef.current?.releasePointerCapture(e.pointerId);
+  };
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => { velocity.current += e.deltaY * settings.scrollSensitivity * 0.05; };
+    window.addEventListener('wheel', handleWheel);
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [settings]);
 
   useEffect(() => {
     const update = (time: number) => {
@@ -130,22 +403,19 @@ const WaveSystem = ({ onImageClick, settings }: any) => {
         const angleAtX = settings.frequency * x * Math.PI;
         const basePathY = settings.amplitude * Math.sin(angleAtX);
         const centerDist = Math.abs(x);
-        let explosionFactor = 0;
         let offsetX = 0, offsetY = 0;
 
         if (centerDist < settings.disperseRadius) {
-          explosionFactor = Math.pow(1 - (centerDist / settings.disperseRadius), 2) * settings.disperseRatio;
+          const factor = Math.pow(1 - (centerDist / settings.disperseRadius), 2) * settings.disperseRatio;
           const angle = (index / IMAGES.length) * Math.PI * 2 * 15;
-          const explosionStrength = settings.disperseStrength * explosionFactor;
-          offsetX = Math.cos(angle) * explosionStrength;
-          offsetY = Math.sin(angle) * explosionStrength;
+          const strength = settings.disperseStrength * factor;
+          offsetX = Math.cos(angle) * strength;
+          offsetY = Math.sin(angle) * strength;
         }
 
-        const finalX = x + offsetX;
-        const finalY = basePathY + offsetY;
         const scale = 0.4 + (1.2 * Math.pow(1 - Math.min(1, Math.abs(x) / (window.innerWidth / 2)), 1.5));
         const isHovered = hoveredId === IMAGES[index].id;
-        el.style.transform = \`translate3d(calc(-50% + \${finalX}px), calc(-50% + \${finalY}px), 0) scale(\${isHovered ? scale * 1.6 : scale})\`;
+        el.style.transform = \`translate3d(calc(-50% + \${x + offsetX}px), calc(-50% + \${basePathY + offsetY}px), 0) scale(\${isHovered ? scale * 1.6 : scale})\`;
         el.style.zIndex = isHovered ? "1000" : Math.floor((1 - Math.abs(x) / (window.innerWidth / 2)) * 100).toString();
       });
     };
@@ -154,9 +424,9 @@ const WaveSystem = ({ onImageClick, settings }: any) => {
   }, [hoveredId, settings]);
 
   return (
-    <div className="fixed inset-0 z-[100] touch-none select-none">
+    <div ref={containerRef} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} className="fixed inset-0 z-[100] touch-none select-none">
       {IMAGES.map((img, i) => (
-        <WaveItem key={img.id} ref={(el: any) => itemRefs.current[i] = el} image={img} isHovered={hoveredId === img.id} onHover={setHoveredId} introProgress={1} />
+        <WaveItem key={img.id} ref={(el: any) => itemRefs.current[i] = el} image={img} isHovered={hoveredId === img.id} onHover={setHoveredId} introProgress={introProgress} />
       ))}
     </div>
   );
@@ -164,52 +434,66 @@ const WaveSystem = ({ onImageClick, settings }: any) => {
 
 // --- MAIN APP ---
 export default function App() {
-  const [isDarkMode, setIsDarkMode] = useState(${isDark});
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [scrollSettings, setScrollSettings] = useState(CONFIG);
+  const [scrollSettings, setScrollSettings] = useState(${JSON.stringify(settings, null, 2)});
+  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [introFinished, setIntroFinished] = useState(false);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [showGrid, setShowGrid] = useState(true);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode);
-  }, [isDarkMode]);
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIntroFinished(true), 4500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handlePrev = () => {
+    const idx = IMAGES.findIndex(i => i.id === selectedImage.id);
+    setSelectedImage(IMAGES[(idx - 1 + IMAGES.length) % IMAGES.length]);
+  };
+
+  const handleNext = () => {
+    const idx = IMAGES.findIndex(i => i.id === selectedImage.id);
+    setSelectedImage(IMAGES[(idx + 1) % IMAGES.length]);
+  };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-background text-foreground transition-colors duration-700 font-sans">
-      <BackgroundGrid visible={true} />
-      
-      <nav className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-12 py-10 pointer-events-none">
-        <div className="text-foreground font-bold text-xl tracking-tighter pointer-events-auto">Motion</div>
-        <div className="flex items-center gap-8 pointer-events-auto">
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 text-foreground/20 hover:text-foreground transition-colors">
-            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-          <button onClick={() => setIsSettingsOpen(true)} className="text-foreground/20 hover:text-foreground transition-colors">
-            <Settings2 size={18} />
-          </button>
-        </div>
-      </nav>
-
-      <HeroLayout introFinished={true} layer="bg" />
-      <WaveSystem settings={scrollSettings} />
-      <HeroLayout introFinished={true} layer="fg" />
-
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed top-0 right-0 bottom-0 w-80 bg-background/80 backdrop-blur-2xl border-l border-foreground/10 z-[2000] p-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-foreground text-xs uppercase tracking-widest font-bold">Settings</h2>
-              <button onClick={() => setIsSettingsOpen(false)}><X size={20} /></button>
-            </div>
-            {/* Settings Sliders would go here - simplified for export */}
-            <p className="text-foreground/40 text-xs italic">Settings applied from your session.</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className="relative w-full h-screen overflow-hidden bg-background text-foreground font-sans selection:bg-foreground selection:text-background">
+      <BackgroundGrid visible={showGrid} />
+      <Navbar onSettingsClick={() => setIsSettingsOpen(true)} />
+      <HeroLayout introFinished={introFinished} layer="bg" />
+      <WaveSystem settings={scrollSettings} onImageClick={setSelectedImage} hoveredId={hoveredId} setHoveredId={setHoveredId} />
+      <HeroLayout introFinished={introFinished} layer="fg" />
+      <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} settings={scrollSettings} onSettingsChange={setScrollSettings} onReset={() => setScrollSettings(${JSON.stringify(settings, null, 2)})} showGrid={showGrid} onGridToggle={() => setShowGrid(!showGrid)} />
+      <Lightbox image={selectedImage} isOpen={!!selectedImage} onClose={() => setSelectedImage(null)} onPrev={handlePrev} onNext={handleNext} />
+      <div className="fixed bottom-6 left-6 md:bottom-8 md:right-8 md:left-auto z-[1000] flex items-center gap-4 text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-foreground/20 font-bold">
+        <span className="hidden sm:inline">Scroll or Drag to Explore</span>
+        <div className="hidden sm:block w-12 h-[1px] bg-foreground/10" />
+        <span>© 2026 — Motion Wave</span>
+      </div>
       <style>{\`
         :root { --background: 255 255 255; --foreground: 0 0 0; }
         .dark { --background: 0 0 0; --foreground: 255 255 255; }
         .bg-background { background-color: rgb(var(--background)); }
         .text-foreground { color: rgb(var(--foreground)); }
+        .custom-scrollbar::-webkit-scrollbar { width: 2px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--foreground), 0.1); border-radius: 10px; }
+        
+        /* View Transitions */
+        html { view-transition-name: none; }
+        ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+        ::view-transition-old(root) { z-index: 1; }
+        ::view-transition-new(root) { z-index: 2147483647; }
+        ::view-transition-group(root) { animation-duration: 0.7s; }
       \`}</style>
     </div>
   );
@@ -219,97 +503,74 @@ export default function App() {
 
   const generateHTML = () => {
     const isDark = document.documentElement.classList.contains('dark');
-    return `<!DOCTYPE html>
-<html lang="en" class="${isDark ? 'dark' : ''}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motion Wave Gallery - Full Export</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
-    <style>
-        :root { --background: 255 255 255; --foreground: 0 0 0; }
-        .dark { --background: 0 0 0; --foreground: 255 255 255; }
-        body { background: rgb(var(--background)); color: rgb(var(--foreground)); margin: 0; font-family: 'Inter', sans-serif; overflow: hidden; transition: background 0.7s, color 0.7s; }
-        .font-serif { font-family: 'Playfair Display', serif; }
-        .gallery-item { position: absolute; top: 50%; left: 50%; width: 60px; height: 90px; cursor: pointer; will-change: transform; }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 2px; transition: transform 0.7s; }
-        .grid-bg { position: fixed; inset: 0; z-index: -1; opacity: 0.1; background-image: linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px); background-size: 100px 100px; transform: perspective(1200px) rotateX(15deg) scale(1.2); }
-    </style>
-</head>
-<body>
-    <div class="grid-bg"></div>
+    const tsxCode = generateTSX();
     
-    <nav class="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-12 py-10">
-        <div class="font-bold text-xl tracking-tighter">Motion</div>
-        <button onclick="document.documentElement.classList.toggle('dark')" class="opacity-20 hover:opacity-100 transition-opacity">Toggle Theme</button>
-    </nav>
+    // Clean up the TSX code for HTML environment
+    const cleanedCode = tsxCode
+      .replace(/import.*from\s+['"].*['"];/g, '')
+      .replace(/import\s+['"].*['"];/g, '')
+      .replace(/export default function App/, 'function App')
+      .replace(/export const/, 'const')
+      .replace(/import\s+\*\s+as\s+Icons\s+from\s+['"]lucide-react['"];/g, 'const Icons = {};')
+      .replace(/:\s*(?:any|string|number|boolean|object|PortfolioImage|ScrollSettings|PortfolioImage\s*\|\s*null|any\[\]|\{.*\}|\[.*\])/g, '')
+      .replace(/<Icon name="([a-z0-9-]+)" size=\{([0-9]+)\} \/>/g, (match, p1, p2) => {
+        return '<Icon name="' + p1 + '" size={' + p2 + '} />';
+      });
 
-    <div class="fixed inset-0 pointer-events-none px-12 z-[200]">
-        <div class="absolute bottom-24 left-12 max-w-4xl">
-            <h1 class="text-[10vw] md:text-[8vw] font-serif leading-[0.82] tracking-tighter mb-10">
-                Every frame,<br><i class="opacity-50">every story.</i>
-            </h1>
-        </div>
-    </div>
+    const parts = [
+      '<!DOCTYPE html>',
+      '<html lang="en" class="' + (isDark ? 'dark' : '') + '">',
+      '<head>',
+      '    <meta charset="UTF-8">',
+      '    <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+      '    <title>Motion Wave Gallery - Full Export</title>',
+      '    <script src="https://cdn.tailwindcss.com"></script>',
+      '    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>',
+      '    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>',
+      '    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>',
+      '    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>',
+      '    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>',
+      '    <script src="https://unpkg.com/lucide@latest"></script>',
+      '    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">',
+      '    <style>',
+      '        :root { --background: 255 255 255; --foreground: 0 0 0; }',
+      '        .dark { --background: 0 0 0; --foreground: 255 255 255; }',
+      '        body { background-color: rgb(var(--background)); color: rgb(var(--foreground)); margin: 0; font-family: \'Inter\', sans-serif; overflow: hidden; }',
+      '        .font-serif { font-family: \'Playfair Display\', serif; }',
+      '        .custom-scrollbar::-webkit-scrollbar { width: 2px; }',
+      '        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }',
+      '        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--foreground), 0.1); border-radius: 10px; }',
+      '    </style>',
+      '</head>',
+      '<body>',
+      '    <div id="root"></div>',
+      '    <script type="text/babel">',
+      '        const { useEffect, useRef, useState, useCallback, forwardRef, useMemo } = React;',
+      '        const { motion, AnimatePresence } = window.Motion || window.FramerMotion;',
+      '        ',
+      '        const cn = (...classes) => classes.filter(Boolean).join(\' \');',
+      '',
+      '        const Icon = ({ name, size = 20, className = "" }) => {',
+      '            const iconRef = useRef(null);',
+      '            useEffect(() => {',
+      '                if (typeof lucide !== "undefined" && iconRef.current) {',
+      '                    lucide.createIcons({',
+      '                        attrs: { "stroke-width": 2, "width": size, "height": size, "class": className },',
+      '                        nameAttr: "data-lucide"',
+      '                    });',
+      '                }',
+      '            }, [name, size, className]);',
+      '            return <i data-lucide={name} ref={iconRef} className={className} style={{ width: size, height: size, display: "inline-block" }}></i>;',
+      '        };',
+      cleanedCode,
+      '        const root = ReactDOM.createRoot(document.getElementById(\'root\'));',
+      '        root.render(<App />);',
+      '    </script>',
+      '</body>',
+      '</html>'
+    ];
 
-    <div id="gallery" class="fixed inset-0 z-[100]"></div>
-
-    <script>
-        const CONFIG = ${JSON.stringify(settings, null, 2)};
-        const IMAGES = ${JSON.stringify(IMAGES, null, 2)};
-        const gallery = document.getElementById('gallery');
-        const items = [];
-        let currentPosX = 0;
-        let velocity = 0;
-
-        IMAGES.forEach((img, i) => {
-            const el = document.createElement('div');
-            el.className = 'gallery-item';
-            el.innerHTML = \`<img src="\${img.url}" alt="\${img.title}">\`;
-            gallery.appendChild(el);
-            items.push(el);
-        });
-
-        window.addEventListener('wheel', (e) => {
-            velocity += e.deltaY * CONFIG.scrollSensitivity * 0.05;
-        });
-
-        function animate(time) {
-            currentPosX += velocity;
-            velocity *= CONFIG.inertiaDecay;
-            currentPosX += Math.sin(Date.now() * 0.0008) * 0.3;
-
-            const totalWidth = IMAGES.length * CONFIG.spacing;
-            items.forEach((el, i) => {
-                const baseX = i * CONFIG.spacing;
-                let x = (baseX - currentPosX) % totalWidth;
-                if (x < -totalWidth / 2) x += totalWidth;
-                if (x > totalWidth / 2) x -= totalWidth;
-
-                const angleAtX = CONFIG.frequency * x * Math.PI;
-                const basePathY = CONFIG.amplitude * Math.sin(angleAtX);
-                const centerDist = Math.abs(x);
-                let offsetX = 0, offsetY = 0;
-
-                if (centerDist < CONFIG.disperseRadius) {
-                    const factor = Math.pow(1 - (centerDist / CONFIG.disperseRadius), 2) * CONFIG.disperseRatio;
-                    const angle = (i / IMAGES.length) * Math.PI * 2 * 15;
-                    offsetX = Math.cos(angle) * CONFIG.disperseStrength * factor;
-                    offsetY = Math.sin(angle) * CONFIG.disperseStrength * factor;
-                }
-
-                const scale = 0.4 + (1.2 * Math.pow(1 - Math.min(1, Math.abs(x) / (window.innerWidth / 2)), 1.5));
-                el.style.transform = \`translate3d(calc(-50% + \${x + offsetX}px), calc(-50% + \${basePathY + offsetY}px), 0) scale(\${scale})\`;
-                el.style.zIndex = Math.floor((1 - Math.abs(x) / (window.innerWidth / 2)) * 100);
-            });
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
-</body>
-</html>`;
+    return parts.join('\n');
   };
 
   const copyToClipboard = async (type: 'tsx' | 'html') => {
@@ -337,7 +598,7 @@ export default function App() {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="bg-background border border-foreground/10 rounded-2xl p-8 max-w-2xl w-full flex flex-col gap-8 shadow-2xl"
+            className="bg-background border border-foreground/10 rounded-2xl p-6 md:p-8 max-w-2xl w-full flex flex-col gap-6 md:gap-8 shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">

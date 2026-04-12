@@ -33,21 +33,21 @@ export const Lightbox: React.FC<LightboxProps> = ({ image, onClose, onPrev, onNe
         >
           <div className="relative w-full h-full flex items-center justify-center p-4 md:p-12" onClick={(e) => e.stopPropagation()}>
             <motion.button
-              className="absolute top-8 right-8 text-foreground/50 hover:text-foreground transition-colors z-[2001]"
+              className="absolute top-6 right-6 md:top-8 md:right-8 w-12 h-12 flex items-center justify-center text-foreground/50 hover:text-foreground transition-colors z-[2001] bg-foreground/5 rounded-full backdrop-blur-md"
               onClick={onClose}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <X size={32} />
+              <X size={24} />
             </motion.button>
 
             <motion.button
-              className="absolute left-4 md:left-8 text-foreground/30 hover:text-foreground transition-colors z-[2001]"
+              className="absolute left-2 md:left-8 w-12 h-24 flex items-center justify-center text-foreground/20 hover:text-foreground transition-colors z-[2001]"
               onClick={onPrev}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <ChevronLeft size={48} />
+              <ChevronLeft size={32} />
             </motion.button>
 
             <div
@@ -73,12 +73,12 @@ export const Lightbox: React.FC<LightboxProps> = ({ image, onClose, onPrev, onNe
             </div>
 
             <motion.button
-              className="absolute right-4 md:right-8 text-foreground/30 hover:text-foreground transition-colors z-[2001]"
+              className="absolute right-2 md:right-8 w-12 h-24 flex items-center justify-center text-foreground/20 hover:text-foreground transition-colors z-[2001]"
               onClick={onNext}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <ChevronRight size={48} />
+              <ChevronRight size={32} />
             </motion.button>
           </div>
         </motion.div>

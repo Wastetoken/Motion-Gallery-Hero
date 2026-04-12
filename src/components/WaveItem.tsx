@@ -20,6 +20,8 @@ export const WaveItem = forwardRef<HTMLDivElement, WaveItemProps>(({
   return (
     <div
       ref={ref}
+      data-wave-item
+      data-id={image.id}
       className={cn(
         "absolute top-1/2 left-1/2 cursor-pointer transition-shadow duration-700",
         isHovered ? "z-[1000]" : ""

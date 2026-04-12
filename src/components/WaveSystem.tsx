@@ -149,13 +149,20 @@ export const WaveSystem: React.FC<WaveSystemProps> = ({ onImageClick, onIntroFin
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     lastDragX.current = e.clientX;
     velocity.current = 0;
+    
+    // On mobile, clear hover if we start dragging
+    if (e.pointerType === 'touch') {
+      // setHoveredId(null); // Don't clear yet, might be a tap
+    }
+    
     containerRef.current?.setPointerCapture(e.pointerId);
   }, [introFinished]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDragging.current) return;
-    const dist = Math.abs(e.clientX - dragStartPos.current.x);
-    if (dist > 5) isClickCandidate.current = false;
+    const dist = Math.hypot(e.clientX - dragStartPos.current.x, e.clientY - dragStartPos.current.y);
+    if (dist > 10) isClickCandidate.current = false;
+    
     const deltaX = e.clientX - lastDragX.current;
     lastDragX.current = e.clientX;
     currentPosX.current -= deltaX * settings.dragSensitivity;
@@ -163,9 +170,26 @@ export const WaveSystem: React.FC<WaveSystemProps> = ({ onImageClick, onIntroFin
   }, [settings.dragSensitivity]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (isClickCandidate.current && hoveredId) {
-      const img = IMAGES.find(i => i.id === hoveredId);
-      if (img) onImageClick(img);
+    if (isClickCandidate.current) {
+      // Find the item under the pointer manually if hoveredId is unreliable on mobile
+      const target = e.target as HTMLElement;
+      const itemElement = target.closest('[data-wave-item]');
+      const id = itemElement?.getAttribute('data-id');
+      
+      if (id) {
+        const img = IMAGES.find(i => i.id === id);
+        if (img) {
+          // On mobile, if it's not hovered, hover it first. If already hovered, open it.
+          // This gives a nice "inspect" feel.
+          if (e.pointerType === 'touch' && hoveredId !== id) {
+            setHoveredId(id);
+          } else {
+            onImageClick(img);
+          }
+        }
+      } else {
+        setHoveredId(null);
+      }
     }
     isDragging.current = false;
     isClickCandidate.current = false;

@@ -12,44 +12,40 @@ export const AnimatedThemeToggler = ({ className }: AnimatedThemeTogglerProps) =
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("theme")
-      if (saved) return saved === "dark"
       return document.documentElement.classList.contains("dark")
     }
     return true
   })
 
+  // Sync state with DOM class changes (from App.tsx or other sources)
   useEffect(() => {
-    const syncTheme = () => setDarkMode(document.documentElement.classList.contains("dark"))
+    const syncTheme = () => {
+      const isDark = document.documentElement.classList.contains("dark")
+      if (isDark !== darkMode) setDarkMode(isDark)
+    }
+    
     const observer = new MutationObserver(syncTheme)
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
-    
-    syncTheme()
-    
     return () => observer.disconnect()
-  }, [])
+  }, [darkMode])
 
   const onToggle = useCallback(async () => {
     if (!buttonRef.current) return
 
-    // @ts-ignore - startViewTransition is not yet in the standard TS types
-    if (!document.startViewTransition) {
-      const toggled = !darkMode
-      setDarkMode(toggled)
-      document.documentElement.classList.toggle("dark", toggled)
-      localStorage.setItem("theme", toggled ? "dark" : "light")
-      return
+    const toggle = () => {
+      const isDark = document.documentElement.classList.contains("dark")
+      const next = !isDark
+      
+      document.documentElement.classList.toggle("dark", next)
+      localStorage.setItem("theme", next ? "dark" : "light")
+      setDarkMode(next)
     }
 
     // @ts-ignore
-    await document.startViewTransition(() => {
-      flushSync(() => {
-        const toggled = !darkMode
-        setDarkMode(toggled)
-        document.documentElement.classList.toggle("dark", toggled)
-        localStorage.setItem("theme", toggled ? "dark" : "light")
-      })
-    }).ready
+    if (!document.startViewTransition) {
+      toggle()
+      return
+    }
 
     const { left, top, width, height } = buttonRef.current.getBoundingClientRect()
     const centerX = left + width / 2
@@ -58,6 +54,15 @@ export const AnimatedThemeToggler = ({ className }: AnimatedThemeTogglerProps) =
       Math.max(centerX, window.innerWidth - centerX),
       Math.max(centerY, window.innerHeight - centerY)
     )
+
+    // @ts-ignore
+    const transition = document.startViewTransition(() => {
+      flushSync(() => {
+        toggle()
+      })
+    })
+
+    await transition.ready
 
     document.documentElement.animate(
       {
@@ -80,8 +85,8 @@ export const AnimatedThemeToggler = ({ className }: AnimatedThemeTogglerProps) =
       onClick={onToggle}
       aria-label="Switch theme"
       className={cn(
-        "flex items-center justify-center p-2 rounded-full outline-none focus:outline-none active:outline-none focus:ring-0 cursor-pointer transition-colors duration-500",
-        darkMode ? "text-white/20 hover:text-white" : "text-black/20 hover:text-black",
+        "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full outline-none focus:outline-none active:scale-90 transition-all duration-300",
+        darkMode ? "bg-white/5 text-white/40 hover:text-white hover:bg-white/10" : "bg-black/5 text-black/40 hover:text-black hover:bg-black/10",
         className
       )}
       type="button"

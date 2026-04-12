@@ -16,7 +16,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [scrollSettings, setScrollSettings] = useState<ScrollSettings>(WAVE_CONFIG);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [showGrid, setShowGrid] = useState(true);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -25,20 +25,11 @@ export default function App() {
     } else {
       document.documentElement.classList.add("dark");
     }
-    
-    const syncTheme = () => setIsDarkMode(document.documentElement.classList.contains("dark"));
-    const observer = new MutationObserver(syncTheme);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    
-    // Initial sync
-    syncTheme();
-    
-    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
     // Intro Sequence Timing
-    const timer1 = setTimeout(() => setGridVisible(true), 1500);
+    const timer1 = setTimeout(() => setGridVisible(true), 500);
     const timer2 = setTimeout(() => setWaveStart(true), 2500);
     
     return () => {
@@ -62,8 +53,8 @@ export default function App() {
   }, [selectedImage]);
 
   return (
-    <div className={`relative w-full h-screen overflow-hidden transition-colors duration-700 font-sans selection:bg-foreground selection:text-background bg-background text-foreground`}>
-      <BackgroundGrid visible={gridVisible} />
+    <div className={`relative w-full h-screen overflow-hidden font-sans selection:bg-foreground selection:text-background bg-background text-foreground`}>
+      <BackgroundGrid visible={gridVisible && showGrid} />
       <Navbar 
         onSettingsClick={() => setIsSettingsOpen(true)}
         onExportClick={() => setIsExportOpen(true)}
@@ -86,6 +77,8 @@ export default function App() {
         settings={scrollSettings}
         onSettingsChange={setScrollSettings}
         onReset={() => setScrollSettings(WAVE_CONFIG)}
+        showGrid={showGrid}
+        onGridToggle={() => setShowGrid(!showGrid)}
       />
 
       <CodeExportModal
@@ -102,10 +95,10 @@ export default function App() {
       />
 
       {/* Custom cursor or other subtle UI elements could go here */}
-      <div className="fixed bottom-8 right-8 z-[1000] flex items-center gap-4 text-[10px] uppercase tracking-[0.2em] text-foreground/20 font-medium">
-        <span>Scroll or Drag to Explore</span>
-        <div className="w-12 h-[1px] bg-foreground/10" />
-        <span>© 2026</span>
+      <div className="fixed bottom-6 left-6 md:bottom-8 md:right-8 md:left-auto z-[1000] flex items-center gap-4 text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-foreground/20 font-bold">
+        <span className="hidden sm:inline">Scroll or Drag to Explore</span>
+        <div className="hidden sm:block w-12 h-[1px] bg-foreground/10" />
+        <span>© 2026 — Motion Wave</span>
       </div>
     </div>
   );

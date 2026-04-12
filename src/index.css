@@ -37,8 +37,13 @@
 
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased transition-colors duration-700;
+    @apply bg-background text-foreground antialiased;
   }
+}
+
+/* View Transitions */
+html {
+  view-transition-name: root;
 }
 
 ::view-transition-old(root),
@@ -52,5 +57,10 @@
 }
 
 ::view-transition-new(root) {
-  z-index: 9999;
+  z-index: 2147483647;
+}
+
+/* Disable all transitions during view transition to prevent flickering */
+::view-transition-group(root) {
+  animation-duration: 0.7s;
 }
