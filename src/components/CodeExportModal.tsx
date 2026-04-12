@@ -149,30 +149,27 @@ const BackgroundGrid = ({ visible }: { visible: boolean }) => (
     transition={{ duration: 2, ease: "easeInOut" }}
     className="fixed inset-0 z-[-1] overflow-hidden bg-background"
   >
+    {/* Primary Technical Grid */}
     <div 
       className="absolute inset-[-50%] opacity-[0.15] dark:opacity-[0.2]"
       style={{
         backgroundImage: \`linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)\`,
         backgroundSize: '40px 40px',
-        maskImage: 'radial-gradient(circle at center, black 40%, transparent 90%)',
-        WebkitMaskImage: 'radial-gradient(circle at center, black 40%, transparent 90%)',
         transform: 'perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px)',
         color: 'rgb(var(--foreground))',
       }}
     />
+    {/* Secondary Bold Grid Lines */}
     <div 
       className="absolute inset-[-50%] opacity-[0.05] dark:opacity-[0.1]"
       style={{
         backgroundImage: \`linear-gradient(to right, currentColor 2px, transparent 2px), linear-gradient(to bottom, currentColor 2px, transparent 2px)\`,
         backgroundSize: '200px 200px',
-        maskImage: 'radial-gradient(circle at center, black 50%, transparent 95%)',
-        WebkitMaskImage: 'radial-gradient(circle at center, black 50%, transparent 95%)',
         transform: 'perspective(1000px) rotateX(60deg) translateY(-100px) translateZ(-200px)',
         color: 'rgb(var(--foreground))',
       }}
     />
-    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/20" />
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,background_100%)]" />
+    {/* Ambient Glows */}
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-foreground/5 blur-[120px] rounded-full pointer-events-none" />
   </motion.div>
 );
@@ -185,10 +182,10 @@ const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: '
       <div className="absolute bottom-[12dvh] md:bottom-24 left-6 right-6 md:left-12 md:right-12 max-w-4xl">
         <div className="mb-4 md:mb-6 overflow-hidden">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isFg ? 0.3 : 0, y: 0 }}
-            transition={{ duration: 1.2, delay: 0.8 }}
-            className="flex items-center gap-3 text-current text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-bold"
+            initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
+            animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 1.2, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="flex items-center gap-3 text-current opacity-30 text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-bold"
           >
             <div className="w-6 md:w-8 h-[1px] bg-current opacity-20" />
             <span>Selected Work 2018 — 2026</span>
@@ -196,18 +193,51 @@ const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: '
         </div>
         <h1 className="text-current text-[14vw] md:text-[8vw] font-serif leading-[0.85] md:leading-[0.82] tracking-tighter mb-4 md:mb-10 whitespace-nowrap">
           <div className="overflow-hidden flex items-baseline">
-            <motion.span animate={{ opacity: isFg ? 1 : 0, y: 0 }} transition={{ delay: 3.5 }} className="block mr-[0.2em]">Every</motion.span>
-            <motion.span animate={{ opacity: isBg ? 1 : 0, y: 0 }} transition={{ delay: 3.6 }} className="block">frame,</motion.span>
+            <motion.span 
+              initial={{ opacity: 0, y: '100%', filter: 'blur(20px)' }}
+              animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }} 
+              transition={{ duration: 1.5, delay: 3.5, ease: [0.22, 1, 0.36, 1] }} 
+              className="block mr-[0.2em]"
+            >
+              Every
+            </motion.span>
+            <motion.span 
+              initial={{ opacity: 0, y: '100%', filter: 'blur(20px)' }}
+              animate={{ opacity: isBg ? 1 : 0, y: 0, filter: 'blur(0px)' }} 
+              transition={{ duration: 1.5, delay: 3.6, ease: [0.22, 1, 0.36, 1] }} 
+              className="block"
+            >
+              frame,
+            </motion.span>
           </div>
           <div className="overflow-hidden flex items-baseline italic">
-            <motion.span animate={{ opacity: isFg ? 1 : 0, y: 0 }} transition={{ delay: 3.8 }} className="block mr-[0.2em]">every</motion.span>
-            <motion.span animate={{ opacity: isBg ? 1 : 0, y: 0 }} transition={{ delay: 3.9 }} className="block">story.</motion.span>
+            <motion.span 
+              initial={{ opacity: 0, y: '100%', filter: 'blur(20px)' }}
+              animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }} 
+              transition={{ duration: 1.5, delay: 3.8, ease: [0.22, 1, 0.36, 1] }} 
+              className="block mr-[0.2em]"
+            >
+              every
+            </motion.span>
+            <motion.span 
+              initial={{ opacity: 0, y: '100%', filter: 'blur(20px)' }}
+              animate={{ opacity: isBg ? 1 : 0, y: 0, filter: 'blur(0px)' }} 
+              transition={{ duration: 1.5, delay: 3.9, ease: [0.22, 1, 0.36, 1] }} 
+              className="block"
+            >
+              story.
+            </motion.span>
           </div>
         </h1>
         <div className="max-w-md h-[140px] md:h-[160px] relative">
           <AnimatePresence>
             {introFinished && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: isFg ? 1 : 0, y: 0 }} className="absolute inset-0">
+              <motion.div 
+                initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }} 
+                animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }} 
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0"
+              >
                 <p className="text-current opacity-40 text-xs md:text-base leading-relaxed mb-6 md:mb-10 font-medium">
                   Twelve years of editorial, fashion, and brand photography — one infinite reel.
                 </p>
@@ -224,22 +254,39 @@ const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: '
   );
 };
 
-const WaveItem = forwardRef(({ image, isHovered, onHover, introProgress }: any, ref: any) => (
-  <div
-    ref={ref}
-    data-wave-item
-    data-id={image.id}
-    className={cn("absolute top-1/2 left-1/2 cursor-pointer transition-shadow duration-700", isHovered && "z-[1000]")}
-    style={{ opacity: introProgress, width: '60px', height: '90px' }}
-    onMouseEnter={() => onHover(image.id)}
-    onMouseLeave={() => onHover(null)}
-  >
-    <div className={cn("relative w-full h-full overflow-hidden rounded-sm shadow-2xl transition-all duration-700", isHovered ? "ring-1 ring-foreground/30 scale-105" : "shadow-lg")}>
-      <img src={image.url} alt={image.title} className={cn("w-full h-full object-cover transition-all duration-700", isHovered ? "scale-110" : "scale-100")} />
-      <div className={cn("absolute inset-0 bg-foreground/5 transition-opacity duration-700", isHovered ? "opacity-0" : "opacity-100")} />
+const WaveItem = forwardRef(({ image, isHovered, onHover, introProgress }: any, ref: any) => {
+  const blurAmount = (1 - introProgress) * 20;
+  return (
+    <div
+      ref={ref}
+      data-wave-item
+      data-id={image.id}
+      className={cn("absolute top-1/2 left-1/2 cursor-pointer transition-shadow duration-700", isHovered && "z-[1000]")}
+      style={{ 
+        opacity: introProgress, 
+        filter: blurAmount > 0 ? \`blur(\${blurAmount}px)\` : 'none',
+        width: '60px', 
+        height: '90px',
+        willChange: 'transform, opacity'
+      }}
+      onMouseEnter={() => onHover(image.id)}
+      onMouseLeave={() => onHover(null)}
+    >
+        <motion.div 
+          layoutId={\`image-\${image.id}\`}
+          className={cn("relative w-full h-full overflow-hidden rounded-sm shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]", isHovered ? "shadow-[0_40px_80px_rgba(0,0,0,0.8)] ring-1 ring-foreground/30 scale-105" : "shadow-lg")}
+        >
+        <img 
+          src={image.url} 
+          alt={image.title} 
+          className={cn("w-full h-full object-cover pointer-events-none transition-all duration-700", isHovered ? "scale-110" : "scale-100")} 
+          style={{ filter: isHovered ? 'url(#liquid-distortion)' : 'none' }}
+        />
+        <div className={cn("absolute inset-0 bg-foreground/5 transition-opacity duration-700", isHovered ? "opacity-0" : "opacity-100")} />
+      </motion.div>
     </div>
-  </div>
-));
+  );
+});
 
 const Lightbox = ({ image, isOpen, onClose, onPrev, onNext }: any) => {
   useEffect(() => {
@@ -295,22 +342,47 @@ const Lightbox = ({ image, isOpen, onClose, onPrev, onNext }: any) => {
           </div>
           <div className="relative w-full h-full flex items-center justify-center p-4 md:p-12" onClick={(e) => e.stopPropagation()}>
             <div className="absolute top-6 right-6 md:top-8 md:right-8 flex items-center gap-4 z-[5001]">
-              <button onClick={onClose} className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded-full backdrop-blur-md border border-foreground/10 transition-all">
+              <motion.button
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={onClose} 
+                className="flex items-center gap-2 px-4 py-2 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded-full backdrop-blur-md border border-foreground/10 transition-all"
+              >
                 <span className="text-[10px] uppercase tracking-widest font-bold">Collapse</span>
                 <Icon name="x" size={16} />
-              </button>
+              </motion.button>
             </div>
-            <button onClick={onPrev} className="absolute left-4 md:left-12 w-14 h-14 flex items-center justify-center text-foreground/30 hover:text-foreground transition-all z-[5001] bg-foreground/5 rounded-full"><Icon name="chevron-left" size={32} /></button>
+            <motion.button 
+              whileHover={{ scale: 1.1, x: -5 }} whileTap={{ scale: 0.9 }}
+              onClick={onPrev} 
+              className="absolute left-4 md:left-12 w-14 h-14 flex items-center justify-center text-foreground/30 hover:text-foreground transition-all z-[5001] bg-foreground/5 hover:bg-foreground/10 rounded-full backdrop-blur-sm border border-foreground/5"
+            >
+              <Icon name="chevron-left" size={32} />
+            </motion.button>
             <div className="relative w-full h-full flex flex-col items-center justify-center max-w-7xl mx-auto">
-              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative group">
-                <img src={image.url} alt={image.title} className="max-w-full max-h-[75vh] md:max-h-[80vh] object-contain rounded-sm shadow-[0_80px_150px_rgba(0,0,0,0.8)]" />
+              <motion.div 
+                layoutId={\`image-\${image.id}\`} 
+                initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                className="relative group"
+              >
+                <img src={image.url} alt={image.title} className="max-w-full max-h-[75vh] md:max-h-[80vh] object-contain rounded-sm shadow-[0_80px_150px_rgba(0,0,0,0.8)] transition-transform duration-700 group-hover:scale-[1.02]" />
+                <div className="absolute -inset-4 bg-foreground/5 blur-3xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               </motion.div>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-10 text-center">
-                <h2 className="text-foreground text-3xl md:text-5xl font-serif italic tracking-tight">{image.title}</h2>
-                <p className="text-foreground/40 text-[10px] md:text-[12px] uppercase tracking-[0.4em] font-bold mt-4">{image.category} — {image.year}</p>
+              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-10 text-center">
+                <h2 className="text-foreground text-3xl md:text-5xl font-serif italic tracking-tight leading-none">{image.title}</h2>
+                <div className="flex items-center justify-center gap-4 mt-4">
+                  <div className="h-[1px] w-8 bg-foreground/20" />
+                  <p className="text-foreground/40 text-[10px] md:text-[12px] uppercase tracking-[0.4em] font-bold">{image.category} — {image.year}</p>
+                  <div className="h-[1px] w-8 bg-foreground/20" />
+                </div>
               </motion.div>
             </div>
-            <button onClick={onNext} className="absolute right-4 md:right-12 w-14 h-14 flex items-center justify-center text-foreground/30 hover:text-foreground transition-all z-[5001] bg-foreground/5 rounded-full"><Icon name="chevron-right" size={32} /></button>
+            <motion.button 
+              whileHover={{ scale: 1.1, x: 5 }} whileTap={{ scale: 0.9 }}
+              onClick={onNext} 
+              className="absolute right-4 md:right-12 w-14 h-14 flex items-center justify-center text-foreground/30 hover:text-foreground transition-all z-[5001] bg-foreground/5 hover:bg-foreground/10 rounded-full backdrop-blur-sm border border-foreground/5"
+            >
+              <Icon name="chevron-right" size={32} />
+            </motion.button>
           </div>
         </motion.div>
       )}
@@ -384,6 +456,7 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
   const isClickCandidate = useRef(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const lastDragX = useRef(0);
+  const clickedItemId = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -397,6 +470,11 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     lastDragX.current = e.clientX;
     velocity.current = 0;
+    
+    const target = e.target as HTMLElement;
+    const itemElement = target.closest('[data-wave-item]');
+    clickedItemId.current = itemElement?.getAttribute('data-id') || null;
+    
     containerRef.current?.setPointerCapture(e.pointerId);
   };
 
@@ -411,23 +489,20 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
   };
 
   const handlePointerUp = (e: any) => {
-    if (isClickCandidate.current) {
-      const target = e.target as HTMLElement;
-      const itemElement = target.closest('[data-wave-item]');
-      const id = itemElement?.getAttribute('data-id');
-      if (id) {
-        const img = IMAGES.find(i => i.id === id);
-        if (img) {
-          if (e.pointerType === 'touch' && hoveredId !== id) {
-            setHoveredId(id);
-          } else {
-            onImageClick(img);
-          }
+    if (isClickCandidate.current && clickedItemId.current) {
+      const id = clickedItemId.current;
+      const img = IMAGES.find(i => i.id === id);
+      if (img) {
+        if (e.pointerType === 'touch' && hoveredId !== id) {
+          setHoveredId(id);
+        } else {
+          onImageClick(img);
         }
-      } else {
-        setHoveredId(null);
       }
+    } else if (isClickCandidate.current) {
+      setHoveredId(null);
     }
+    clickedItemId.current = null;
     isDragging.current = false;
     isClickCandidate.current = false;
     containerRef.current?.releasePointerCapture(e.pointerId);
@@ -441,11 +516,15 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
 
   useEffect(() => {
     const update = (time: number) => {
-      currentPosX.current += velocity.current;
-      velocity.current *= settings.inertiaDecay;
-      currentPosX.current += Math.sin(time * 0.0008) * 0.3;
+      if (!isDragging.current) {
+        currentPosX.current += velocity.current;
+        velocity.current *= settings.inertiaDecay;
+        currentPosX.current += Math.sin(time * 0.0008) * 0.3;
+      }
 
       const totalWidth = IMAGES.length * settings.spacing;
+      const halfWidth = window.innerWidth / 2 || 1;
+
       itemRefs.current.forEach((el, index) => {
         if (!el) return;
         const baseX = index * settings.spacing;
@@ -466,10 +545,18 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
           offsetY = Math.sin(angle) * strength;
         }
 
-        const scale = 0.4 + (1.2 * Math.pow(1 - Math.min(1, Math.abs(x) / (window.innerWidth / 2)), 1.5));
+        const normalizedCenterDist = Math.abs(x) / halfWidth;
+        const safeDist = Math.min(1, Math.max(0, normalizedCenterDist));
+        const scale = 0.4 + (1.2 * Math.pow(1 - safeDist, 1.5));
         const isHovered = hoveredId === IMAGES[index].id;
-        el.style.transform = \`translate3d(calc(-50% + \${x + offsetX}px), calc(-50% + \${basePathY + offsetY}px), 0) scale(\${isHovered ? scale * 1.6 : scale})\`;
-        el.style.zIndex = isHovered ? "1000" : Math.floor((1 - Math.abs(x) / (window.innerWidth / 2)) * 100).toString();
+        
+        const renderScale = isHovered ? scale * 1.6 : scale;
+        const blur = isHovered ? 0 : safeDist * 8;
+        const zIndex = Math.floor((1 - safeDist) * 100);
+
+        el.style.transform = \`translate3d(calc(-50% + \${x + offsetX}px), calc(-50% + \${basePathY + offsetY}px), 0) scale(\${renderScale})\`;
+        el.style.filter = blur > 0.5 ? \`blur(\${blur}px)\` : 'none';
+        el.style.zIndex = isHovered ? "1000" : zIndex.toString();
       });
     };
     gsap.ticker.add(update);
@@ -493,6 +580,8 @@ export default function App() {
   const [introFinished, setIntroFinished] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
+  const [gridVisible, setGridVisible] = useState(false);
+  const [waveStart, setWaveStart] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -504,8 +593,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIntroFinished(true), 4500);
-    return () => clearTimeout(timer);
+    const timer1 = setTimeout(() => setGridVisible(true), 500);
+    const timer2 = setTimeout(() => setWaveStart(true), 2500);
+    return () => { clearTimeout(timer1); clearTimeout(timer2); };
   }, []);
 
   const handlePrev = () => {
@@ -525,13 +615,20 @@ export default function App() {
           filter: selectedImage ? 'blur(8px)' : 'blur(0px)',
           scale: selectedImage ? 0.98 : 1,
         }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.5, ease: "circOut" }}
         className="w-full h-full"
       >
-        <BackgroundGrid visible={showGrid} />
+        <BackgroundGrid visible={gridVisible && showGrid} />
         <Navbar onSettingsClick={() => setIsSettingsOpen(true)} />
         <HeroLayout introFinished={introFinished} layer="bg" />
-        <WaveSystem settings={scrollSettings} onImageClick={setSelectedImage} hoveredId={hoveredId} setHoveredId={setHoveredId} />
+        <WaveSystem 
+          settings={scrollSettings} 
+          onImageClick={setSelectedImage} 
+          hoveredId={hoveredId} 
+          setHoveredId={setHoveredId}
+          onIntroFinish={() => setIntroFinished(true)}
+          startIntro={waveStart}
+        />
         <HeroLayout introFinished={introFinished} layer="fg" />
       </motion.div>
       <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} settings={scrollSettings} onSettingsChange={setScrollSettings} onReset={() => setScrollSettings(${JSON.stringify(settings, null, 2)})} showGrid={showGrid} onGridToggle={() => setShowGrid(!showGrid)} />
@@ -569,15 +666,12 @@ export default function App() {
     
     // Clean up the TSX code for HTML environment
     const cleanedCode = tsxCode
-      .replace(/import.*from\s+['"].*['"];/g, '')
-      .replace(/import\s+['"].*['"];/g, '')
-      .replace(/export default function App/, 'function App')
-      .replace(/export const/, 'const')
-      .replace(/import\s+\*\s+as\s+Icons\s+from\s+['"]lucide-react['"];/g, 'const Icons = {};')
-      .replace(/:\s*(?:any|string|number|boolean|object|PortfolioImage|ScrollSettings|PortfolioImage\s*\|\s*null|any\[\]|\{.*\}|\[.*\])/g, '')
-      .replace(/<Icon name="([a-z0-9-]+)" size=\{([0-9]+)\} \/>/g, (match, p1, p2) => {
-        return '<Icon name="' + p1 + '" size={' + p2 + '} />';
-      });
+      .replace(/import\s+type\s+.*?;/g, '')
+      .replace(/import\s+.*?;/g, '')
+      .replace(/export\s+default\s+function\s+App/, 'function App')
+      .replace(/export\s+const\s+/g, 'const ')
+      .replace(/export\s+interface\s+/g, 'interface ')
+      .replace(/export\s+type\s+/g, 'type ');
 
     const parts = [
       '<!DOCTYPE html>',
@@ -606,9 +700,10 @@ export default function App() {
       '</head>',
       '<body>',
       '    <div id="root"></div>',
-      '    <script type="text/babel">',
+      '    <script type="text/babel" data-presets="typescript,react">',
       '        const { useEffect, useRef, useState, useCallback, forwardRef, useMemo } = React;',
-      '        const { motion, AnimatePresence } = window.Motion || window.FramerMotion;',
+      '        const { motion, AnimatePresence } = window.Motion || window.FramerMotion || {};',
+      '        const Icons = {};',
       '        ',
       '        const cn = (...classes) => classes.filter(Boolean).join(\' \');',
       '',
