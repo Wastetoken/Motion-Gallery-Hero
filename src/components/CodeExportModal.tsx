@@ -17,8 +17,11 @@ export const CodeExportModal: React.FC<CodeExportModalProps> = ({ isOpen, onClos
     const isDark = document.documentElement.classList.contains('dark');
     return `import React, { useEffect, useRef, useState, useCallback, forwardRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useGLTF, Float, ContactShadows, Environment } from '@react-three/drei';
 import * as Icons from 'lucide-react';
 import gsap from 'gsap';
+import * as THREE from 'three';
 
 /**
  * FULL UI EXPORT - MOTION WAVE GALLERY
@@ -58,6 +61,70 @@ const Icon = ({ name, size = 20, className = "" }: { name: string, size?: number
 };
 
 // --- COMPONENTS ---
+
+// Finalized configuration from user
+const CONFIG = {
+  posX: 0.21,
+  posY: -0.56,
+  posZ: -7.52,
+  rotX: -0.111592653589793,
+  rotY: 2.98840734641021,
+  rotZ: 0.388407346410207,
+  scale: 1.16,
+  sensitivity: 4.01,
+  lerp: 0.684,
+  blur: 0,
+  opacity: 1,
+  ambientIntensity: 5,
+  spotIntensity: 8.6,
+  spotX: 9.5,
+  spotY: 17,
+  spotZ: 16,
+  shadowOpacity: 1,
+  shadowScale: 20,
+  shadowBlur: 1.9
+};
+
+const CameraModel = () => {
+  const { scene } = useGLTF('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/camera.glb');
+  const modelRef = useRef<THREE.Group>(null);
+  const { mouse } = useThree();
+
+  useFrame(() => {
+    if (!modelRef.current) return;
+    const targetRotationX = CONFIG.rotX + (-mouse.y * CONFIG.sensitivity * 0.1);
+    const targetRotationY = CONFIG.rotY + (mouse.x * CONFIG.sensitivity * 0.1);
+    modelRef.current.rotation.x = THREE.MathUtils.lerp(modelRef.current.rotation.x, targetRotationX, CONFIG.lerp * 0.1);
+    modelRef.current.rotation.y = THREE.MathUtils.lerp(modelRef.current.rotation.y, targetRotationY, CONFIG.lerp * 0.1);
+    modelRef.current.rotation.z = THREE.MathUtils.lerp(modelRef.current.rotation.z, CONFIG.rotZ, CONFIG.lerp * 0.1);
+    modelRef.current.position.set(CONFIG.posX, CONFIG.posY, CONFIG.posZ);
+  });
+
+  return (
+    <group ref={modelRef} dispose={null} scale={CONFIG.scale}>
+      <primitive object={scene} />
+    </group>
+  );
+};
+
+const CameraScene = () => {
+  return (
+    <div className="fixed inset-0 z-[50] pointer-events-none overflow-hidden">
+      <div className="w-full h-full" style={{ opacity: CONFIG.opacity, filter: 'blur(' + CONFIG.blur + 'px)' }}>
+        <Canvas shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [0, 0, 5], fov: 40 }} gl={{ alpha: true, antialias: true }} onCreated={({ gl }: any) => { gl.setClearColor(0x000000, 0); }}>
+          <ambientLight intensity={CONFIG.ambientIntensity} />
+          <spotLight position={[CONFIG.spotX, CONFIG.spotY, CONFIG.spotZ]} angle={0.15} penumbra={1} intensity={CONFIG.spotIntensity} castShadow />
+          <pointLight position={[-10, -10, -10]} intensity={0.5} />
+          <React.Suspense fallback={null}>
+            <CameraModel />
+            <ContactShadows position={[0, -2, 0]} opacity={CONFIG.shadowOpacity} scale={CONFIG.shadowScale} blur={CONFIG.shadowBlur} far={4.5} />
+            <Environment preset="city" />
+          </React.Suspense>
+        </Canvas>
+      </div>
+    </div>
+  );
+};
 
 const Navbar = ({ onSettingsClick, onExportClick }: any) => (
   <nav className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-4 md:px-12 md:py-10 pointer-events-none">
@@ -566,7 +633,7 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
   return (
     <div ref={containerRef} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} className="fixed inset-0 z-[100] touch-none select-none">
       {IMAGES.map((img, i) => (
-        <WaveItem key={img.id} ref={(el: any) => itemRefs.current[i] = el} image={img} isHovered={hoveredId === img.id} onHover={setHoveredId} introProgress={introProgress} />
+        <WaveItem key={img.id} ref={(el: any) => { itemRefs.current[i] = el; }} image={img} isHovered={hoveredId === img.id} onHover={setHoveredId} introProgress={introProgress} />
       ))}
     </div>
   );
@@ -621,6 +688,7 @@ export default function App() {
         <BackgroundGrid visible={gridVisible && showGrid} />
         <Navbar onSettingsClick={() => setIsSettingsOpen(true)} />
         <HeroLayout introFinished={introFinished} layer="bg" />
+        <CameraScene />
         <WaveSystem 
           settings={scrollSettings} 
           onImageClick={setSelectedImage} 
@@ -686,6 +754,9 @@ export default function App() {
       '    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>',
       '    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>',
       '    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>',
+      '    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>',
+      '    <script src="https://unpkg.com/@react-three/fiber@8.15.11/dist/react-three-fiber.umd.js"></script>',
+      '    <script src="https://unpkg.com/@react-three/drei@9.88.16/dist/index-umd.js"></script>',
       '    <script src="https://unpkg.com/lucide@latest"></script>',
       '    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">',
       '    <style>',
@@ -703,22 +774,10 @@ export default function App() {
       '    <script type="text/babel" data-presets="typescript,react">',
       '        const { useEffect, useRef, useState, useCallback, forwardRef, useMemo } = React;',
       '        const { motion, AnimatePresence } = window.Motion || window.FramerMotion || {};',
+      '        const { Canvas, useFrame, useThree } = window.ReactThreeFiber || {};',
+      '        const { useGLTF, Float, ContactShadows, Environment } = window.drei || {};',
       '        const Icons = {};',
       '        ',
-      '        const cn = (...classes) => classes.filter(Boolean).join(\' \');',
-      '',
-      '        const Icon = ({ name, size = 20, className = "" }) => {',
-      '            const iconRef = useRef(null);',
-      '            useEffect(() => {',
-      '                if (typeof lucide !== "undefined" && iconRef.current) {',
-      '                    lucide.createIcons({',
-      '                        attrs: { "stroke-width": 2, "width": size, "height": size, "class": className },',
-      '                        nameAttr: "data-lucide"',
-      '                    });',
-      '                }',
-      '            }, [name, size, className]);',
-      '            return <i data-lucide={name} ref={iconRef} className={className} style={{ width: size, height: size, display: "inline-block" }}></i>;',
-      '        };',
       cleanedCode,
       '        const root = ReactDOM.createRoot(document.getElementById(\'root\'));',
       '        root.render(<App />);',

@@ -217,7 +217,7 @@ export const WaveSystem: React.FC<WaveSystemProps> = ({ onImageClick, onIntroFin
       {IMAGES.map((image, index) => (
         <WaveItem
           key={image.id}
-          ref={el => itemRefs.current[index] = el}
+          ref={el => { itemRefs.current[index] = el; }}
           image={image}
           isHovered={hoveredId === image.id}
           onHover={setHoveredId}

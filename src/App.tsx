@@ -4,6 +4,7 @@ import { BackgroundGrid } from './components/BackgroundGrid';
 import { Navbar } from './components/Navbar';
 import { HeroBackground, HeroForeground } from './components/Hero';
 import { WaveSystem } from './components/WaveSystem';
+import { CameraScene } from './components/CameraScene';
 import { Lightbox } from './components/Lightbox';
 import { SettingsPanel, ScrollSettings } from './components/SettingsPanel';
 import { CodeExportModal } from './components/CodeExportModal';
@@ -70,7 +71,7 @@ export default function App() {
         />
         
         <HeroBackground introFinished={introFinished} />
-
+        <CameraScene />
         <WaveSystem 
           onImageClick={setSelectedImage} 
           onIntroFinish={() => setIntroFinished(true)}
