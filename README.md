@@ -1,4 +1,3 @@
-[VORTEX_EDIT_1775980979768 (1).webm](https://github.com/user-attachments/assets/e3e434c6-47d4-4940-ace2-83373c4d06e5)
 
 
 ## Run Locally
