@@ -14,14 +14,14 @@ const HeroLayout: React.FC<{
 
   return (
     <div className={`fixed inset-0 pointer-events-none px-6 md:px-12 ${isBg ? 'z-[5]' : 'z-[200]'}`}>
-      <div className="absolute bottom-[12dvh] md:bottom-24 left-6 right-6 md:left-12 md:right-12 max-w-4xl">
+      <div className="absolute bottom-[8dvh] md:bottom-24 left-6 right-6 md:left-12 md:right-12 max-w-4xl">
         {/* Selected Work Tag */}
-        <div className="mb-4 md:mb-6 overflow-hidden">
+        <div className="mb-2 md:mb-6 overflow-hidden">
           <motion.div
             initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
             animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 1.2, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="flex items-center gap-3 text-current opacity-30 text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-bold"
+            className="flex items-center gap-3 text-current opacity-30 text-[7px] md:text-[10px] uppercase tracking-[0.4em] font-bold"
           >
             <div className="w-6 md:w-8 h-[1px] bg-current opacity-20" />
             <span>Selected Work 2018 — 2026</span>
@@ -29,9 +29,9 @@ const HeroLayout: React.FC<{
         </div>
 
         {/* Main Title */}
-        <h1 className="text-current text-[12vw] sm:text-[14vw] md:text-[8vw] font-serif leading-[0.85] md:leading-[0.82] tracking-tighter mb-4 md:mb-10 whitespace-nowrap">
+        <h1 className="text-current text-[11vw] sm:text-[14vw] md:text-[8vw] font-serif leading-[0.85] md:leading-[0.82] tracking-tighter mb-4 md:mb-10">
           {/* Line 1: Every frame, */}
-          <div className="overflow-hidden flex items-baseline">
+          <div className="overflow-hidden flex items-baseline flex-wrap">
             <motion.span
               initial={{ opacity: 0, y: '100%', filter: 'blur(20px)' }}
               animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }}
@@ -51,7 +51,7 @@ const HeroLayout: React.FC<{
           </div>
 
           {/* Line 2: every story. */}
-          <div className="overflow-hidden flex items-baseline italic">
+          <div className="overflow-hidden flex items-baseline italic flex-wrap">
             <motion.span
               initial={{ opacity: 0, y: '100%', filter: 'blur(20px)' }}
               animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }}

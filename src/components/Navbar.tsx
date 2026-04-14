@@ -1,7 +1,6 @@
 import React from 'react';
 import { Settings2, Code } from 'lucide-react';
 import { AnimatedThemeToggler } from './AnimatedThemeToggler';
-import { AudioPlayer } from './AudioPlayer';
 
 interface NavbarProps {
   onSettingsClick: () => void;
@@ -19,8 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, onExportClick }
         </div>
       </div>
       
-      <div className="flex items-center gap-2 md:gap-6 pointer-events-auto">
-        <AudioPlayer />
+      <div className="flex items-center gap-4 md:gap-8 pointer-events-auto">
         <AnimatedThemeToggler />
         
         <button 

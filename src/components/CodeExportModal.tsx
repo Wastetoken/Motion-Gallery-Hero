@@ -122,8 +122,8 @@ const CameraScene = () => {
 
   return (
     <div className="fixed inset-0 z-[50] pointer-events-none overflow-hidden">
-      <div className="w-full h-full" style={{ opacity: CONFIG.opacity, filter: 'blur(' + CONFIG.blur + 'px)' }}>
-        <Canvas shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [0, 0, 5], fov: 40 }} gl={{ alpha: true, antialias: true }} onCreated={({ gl }: any) => { gl.setClearColor(0x000000, 0); }}>
+      <div className="w-full h-full" style={{ opacity: CONFIG.opacity, filter: 'blur(' + CONFIG.blur + 'px)', pointerEvents: 'none' }}>
+        <Canvas shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [0, 0, 5], fov: 40 }} gl={{ alpha: true, antialias: true }} style={{ pointerEvents: 'none' }} onCreated={({ gl }: any) => { gl.setClearColor(0x000000, 0); }}>
           <ambientLight intensity={CONFIG.ambientIntensity} />
           <spotLight position={[CONFIG.spotX, CONFIG.spotY, CONFIG.spotZ]} angle={0.15} penumbra={1} intensity={CONFIG.spotIntensity} castShadow />
           <pointLight position={[-10, -10, -10]} intensity={0.5} />
@@ -258,7 +258,7 @@ const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: '
   const isFg = layer === 'fg';
   return (
     <div className={\`fixed inset-0 pointer-events-none px-6 md:px-12 \${isBg ? 'z-[5]' : 'z-[200]'}\`}>
-      <div className="absolute bottom-[12dvh] md:bottom-24 left-6 right-6 md:left-12 md:right-12 max-w-4xl">
+      <div className="absolute bottom-[8dvh] md:bottom-24 left-6 right-6 md:left-12 md:right-12 max-w-4xl">
         <div className="mb-4 md:mb-6 overflow-hidden">
           <motion.div
             initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
@@ -270,8 +270,8 @@ const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: '
             <span>Selected Work 2018 — 2026</span>
           </motion.div>
         </div>
-        <h1 className="text-current text-[14vw] md:text-[8vw] font-serif leading-[0.85] md:leading-[0.82] tracking-tighter mb-4 md:mb-10 whitespace-nowrap">
-          <div className="overflow-hidden flex items-baseline">
+        <h1 className="text-current text-[11vw] sm:text-[14vw] md:text-[8vw] font-serif leading-[0.85] md:leading-[0.82] tracking-tighter mb-4 md:mb-10">
+          <div className="overflow-hidden flex items-baseline flex-wrap">
             <motion.span 
               initial={{ opacity: 0, y: '100%', filter: 'blur(20px)' }}
               animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }} 
@@ -289,7 +289,7 @@ const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: '
               frame,
             </motion.span>
           </div>
-          <div className="overflow-hidden flex items-baseline italic">
+          <div className="overflow-hidden flex items-baseline italic flex-wrap">
             <motion.span 
               initial={{ opacity: 0, y: '100%', filter: 'blur(20px)' }}
               animate={{ opacity: isFg ? 1 : 0, y: 0, filter: 'blur(0px)' }} 
@@ -688,7 +688,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-background text-foreground font-sans selection:bg-foreground selection:text-background">
+    <div className="relative w-full h-[100dvh] overflow-hidden bg-background text-foreground font-sans selection:bg-foreground selection:text-background">
       <motion.div
         animate={{
           filter: selectedImage ? 'blur(8px)' : 'blur(0px)',

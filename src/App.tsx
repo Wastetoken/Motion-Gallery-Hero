@@ -55,7 +55,7 @@ export default function App() {
   }, [selectedImage]);
 
   return (
-    <div className={`relative w-full h-screen overflow-hidden font-sans selection:bg-foreground selection:text-background bg-background text-foreground`}>
+    <div className={`relative w-full h-[100dvh] overflow-hidden font-sans selection:bg-foreground selection:text-background bg-background text-foreground`}>
       <motion.div
         animate={{
           filter: selectedImage ? 'blur(8px)' : 'blur(0px)',

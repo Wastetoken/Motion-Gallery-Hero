@@ -59,8 +59,8 @@ function CameraModel({ globalMouse }: { globalMouse: React.MutableRefObject<{ x:
       CONFIG.lerp
     );
 
-    // Static Position
-    modelRef.current.position.set(CONFIG.posX, CONFIG.posY, CONFIG.posZ);
+    // Static Position - Now handled by parent group for responsiveness
+    modelRef.current.position.set(0, 0, 0);
   });
 
   return (
@@ -73,37 +73,6 @@ function CameraModel({ globalMouse }: { globalMouse: React.MutableRefObject<{ x:
 export function CameraScene() {
   // Global mouse tracking since the container has pointer-events-none
   const globalMouse = useRef({ x: 0, y: 0 });
-  const [responsiveConfig, setResponsiveConfig] = useState({
-    posX: CONFIG.posX,
-    posY: CONFIG.posY,
-    scale: CONFIG.scale
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      const isMobile = window.innerWidth < 768;
-      const isPortrait = window.innerHeight > window.innerWidth;
-      
-      if (isMobile) {
-        setResponsiveConfig({
-          // On mobile, center it more or move it to a better spot
-          posX: isPortrait ? 0.5 : 1.0, 
-          posY: isPortrait ? -0.5 : 0.02,
-          scale: isPortrait ? CONFIG.scale * 0.7 : CONFIG.scale * 0.8
-        });
-      } else {
-        setResponsiveConfig({
-          posX: CONFIG.posX,
-          posY: CONFIG.posY,
-          scale: CONFIG.scale
-        });
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -118,11 +87,12 @@ export function CameraScene() {
 
   return (
     <div className="fixed inset-0 z-[50] pointer-events-none overflow-hidden">
-      <div className="w-full h-full" style={{ opacity: CONFIG.opacity, filter: `blur(${CONFIG.blur}px)` }}>
+      <div className="w-full h-full" style={{ opacity: CONFIG.opacity, filter: `blur(${CONFIG.blur}px)`, pointerEvents: 'none' }}>
         <Canvas
           shadows={{ type: THREE.PCFShadowMap }}
           camera={{ position: [0, 0, 5], fov: 40 }}
           gl={{ alpha: true, antialias: true }}
+          style={{ pointerEvents: 'none' }}
           onCreated={({ gl }) => {
             gl.setClearColor(0x000000, 0);
           }}
@@ -138,7 +108,7 @@ export function CameraScene() {
           <pointLight position={[-10, -10, -10]} intensity={0.5} />
           
           <Suspense fallback={null}>
-            <group position={[responsiveConfig.posX, responsiveConfig.posY, CONFIG.posZ]} scale={responsiveConfig.scale}>
+            <group position={[CONFIG.posX, CONFIG.posY, CONFIG.posZ]} scale={CONFIG.scale}>
               <CameraModel globalMouse={globalMouse} />
             </group>
             <ContactShadows
