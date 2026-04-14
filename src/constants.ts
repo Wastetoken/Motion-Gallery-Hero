@@ -99,4 +99,6 @@ export const WAVE_CONFIG = {
   disperseRadius: 300,
   disperseStrength: 220,
   disperseRatio: 0.5,
+  pathYOffset: 0,
+  pathZOffset: 0,
 };

@@ -12,6 +12,8 @@ export interface ScrollSettings {
   disperseRadius: number;
   disperseStrength: number;
   disperseRatio: number;
+  pathYOffset: number;
+  pathZOffset: number;
 }
 
 interface SettingsPanelProps {
@@ -161,6 +163,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 max={1}
                 step={0.01}
                 onChange={(v) => handleChange('disperseRatio', v)}
+              />
+            </div>
+            <div className="space-y-6">
+              <h3 className="text-foreground/20 text-[8px] uppercase tracking-[0.4em] font-bold border-b border-foreground/5 pb-2">Path Layout</h3>
+              <SettingSlider
+                label="Path Y Offset (Up/Down)"
+                value={settings.pathYOffset}
+                min={-500}
+                max={500}
+                step={1}
+                onChange={(v) => handleChange('pathYOffset', v)}
+              />
+              <SettingSlider
+                label="Path Z Offset (In/Out)"
+                value={settings.pathZOffset}
+                min={-1000}
+                max={500}
+                step={1}
+                onChange={(v) => handleChange('pathZOffset', v)}
               />
             </div>
           </div>

@@ -333,17 +333,14 @@ const HeroLayout = ({ introFinished, layer }: { introFinished: boolean, layer: '
   );
 };
 
-const WaveItem = forwardRef(({ image, isHovered, onHover, introProgress }: any, ref: any) => {
-  const blurAmount = (1 - introProgress) * 20;
+const WaveItem = forwardRef(({ image, isHovered, onHover, settings }: any, ref: any) => {
   return (
     <div
       ref={ref}
       data-wave-item
       data-id={image.id}
-      className={cn("absolute top-1/2 left-1/2 cursor-pointer transition-shadow duration-700", isHovered && "z-[1000]")}
+      className={cn("absolute top-1/2 left-1/2 cursor-pointer", isHovered && "z-[1000]")}
       style={{ 
-        opacity: introProgress, 
-        filter: blurAmount > 0 ? \`blur(\${blurAmount}px)\` : 'none',
         width: '60px', 
         height: '90px',
         willChange: 'transform, opacity'
@@ -351,7 +348,7 @@ const WaveItem = forwardRef(({ image, isHovered, onHover, introProgress }: any, 
       onMouseEnter={() => onHover(image.id)}
       onMouseLeave={() => onHover(null)}
     >
-        <motion.div 
+      <motion.div 
           layoutId={\`image-\${image.id}\`}
           className={cn("relative w-full h-full overflow-hidden rounded-sm shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]", isHovered ? "shadow-[0_40px_80px_rgba(0,0,0,0.8)] ring-1 ring-foreground/30 scale-105" : "shadow-lg")}
         >
@@ -521,6 +518,11 @@ const SettingsPanel = ({ isOpen, onClose, settings, onSettingsChange, onReset, s
             <SettingSlider label="Disperse Strength" value={settings.disperseStrength} min={0} max={600} step={10} onChange={(v: any) => onSettingsChange({...settings, disperseStrength: v})} />
             <SettingSlider label="Disperse Ratio" value={settings.disperseRatio} min={0} max={1} step={0.01} onChange={(v: any) => onSettingsChange({...settings, disperseRatio: v})} />
           </div>
+          <div className="space-y-6">
+            <h3 className="text-foreground/20 text-[8px] uppercase tracking-[0.4em] font-bold border-b border-foreground/5 pb-2">Path Layout</h3>
+            <SettingSlider label="Path Y Offset (Up/Down)" value={settings.pathYOffset} min={-500} max={500} step={1} onChange={(v: any) => onSettingsChange({...settings, pathYOffset: v})} />
+            <SettingSlider label="Path Z Offset (In/Out)" value={settings.pathZOffset} min={-1000} max={500} step={1} onChange={(v: any) => onSettingsChange({...settings, pathZOffset: v})} />
+          </div>
         </div>
       </motion.div>
     )}
@@ -539,8 +541,15 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const settingsRef = useRef(settings);
+  const hoveredIdRef = useRef(hoveredId);
+  const introProgressRef = useRef(0);
+
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
+  useEffect(() => { hoveredIdRef.current = hoveredId; }, [hoveredId]);
+
   useEffect(() => {
-    gsap.to({ val: 0 }, { val: 1, duration: 2.5, delay: 1, ease: "power4.out", onUpdate: function() { setIntroProgress(this.targets()[0].val); } });
+    gsap.to(introProgressRef, { current: 1, duration: 2.5, delay: 1, ease: "power4.out" });
   }, []);
 
   const handlePointerDown = (e: any) => {
@@ -563,8 +572,8 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
     if (dist > 10) isClickCandidate.current = false;
     const deltaX = e.clientX - lastDragX.current;
     lastDragX.current = e.clientX;
-    currentPosX.current -= deltaX * settings.dragSensitivity;
-    velocity.current = -deltaX * settings.dragSensitivity;
+    currentPosX.current -= deltaX * settingsRef.current.dragSensitivity;
+    velocity.current = -deltaX * settingsRef.current.dragSensitivity;
   };
 
   const handlePointerUp = (e: any) => {
@@ -588,64 +597,81 @@ const WaveSystem = ({ onImageClick, settings, hoveredId, setHoveredId }: any) =>
   };
 
   useEffect(() => {
-    const handleWheel = (e: WheelEvent) => { velocity.current += e.deltaY * settings.scrollSensitivity * 0.05; };
+    const handleWheel = (e: WheelEvent) => { velocity.current += e.deltaY * settingsRef.current.scrollSensitivity * 0.05; };
     window.addEventListener('wheel', handleWheel);
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [settings]);
+  }, []);
 
   useEffect(() => {
     const update = (time: number) => {
+      const s = settingsRef.current;
       if (!isDragging.current) {
         currentPosX.current += velocity.current;
-        velocity.current *= settings.inertiaDecay;
+        velocity.current *= s.inertiaDecay;
         currentPosX.current += Math.sin(time * 0.0008) * 0.3;
       }
 
-      const totalWidth = IMAGES.length * settings.spacing;
+      const totalWidth = IMAGES.length * s.spacing;
       const halfWidth = window.innerWidth / 2 || 1;
+
+      const wavelength = 2 / (s.frequency || 0.001);
+      const k = Math.round(totalWidth / wavelength);
+      const periodicFrequency = k / totalWidth;
+
+      currentPosX.current = ((currentPosX.current % totalWidth) + totalWidth) % totalWidth;
 
       itemRefs.current.forEach((el, index) => {
         if (!el) return;
-        const baseX = index * settings.spacing;
+        const baseX = index * s.spacing;
         let x = (baseX - currentPosX.current) % totalWidth;
         if (x < -totalWidth / 2) x += totalWidth;
         if (x > totalWidth / 2) x -= totalWidth;
 
-        const angleAtX = settings.frequency * x * Math.PI;
-        const basePathY = settings.amplitude * Math.sin(angleAtX);
+        const angleAtX = periodicFrequency * x * Math.PI;
+        const basePathY = s.amplitude * Math.sin(angleAtX);
         const centerDist = Math.abs(x);
         let offsetX = 0, offsetY = 0;
 
-        if (centerDist < settings.disperseRadius) {
-          const factor = Math.pow(1 - (centerDist / settings.disperseRadius), 2) * settings.disperseRatio;
+        if (centerDist < s.disperseRadius) {
+          const factor = Math.pow(1 - (centerDist / s.disperseRadius), 2) * s.disperseRatio;
           const angle = (index / IMAGES.length) * Math.PI * 2 * 15;
-          const strength = settings.disperseStrength * factor;
+          const strength = s.disperseStrength * factor;
           offsetX = Math.cos(angle) * strength;
           offsetY = Math.sin(angle) * strength;
         }
 
         const normalizedCenterDist = Math.abs(x) / halfWidth;
         const safeDist = Math.min(1, Math.max(0, normalizedCenterDist));
-        const scale = 0.4 + (1.2 * Math.pow(1 - safeDist, 1.5));
-        const isHovered = hoveredId === IMAGES[index].id;
         
+        const baseScale = 0.4 + (1.2 * Math.pow(1 - safeDist, 1.5));
+        const depthScale = 1 + (s.pathZOffset / 1000);
+        const scale = baseScale * depthScale;
+        
+        const isHovered = hoveredIdRef.current === IMAGES[index].id;
         const renderScale = isHovered ? scale * 1.6 : scale;
-        const blur = isHovered ? 0 : safeDist * 8;
+        
+        const itemDelay = (index / IMAGES.length) * 0.5;
+        const itemProgress = Math.min(1, Math.max(0, (introProgressRef.current - itemDelay) / 0.5));
+        
+        const depthBlur = Math.max(0, -s.pathZOffset / 50);
+        const blur = isHovered ? 0 : (safeDist * 8) + depthBlur + (1 - itemProgress) * 20;
         const zIndex = Math.floor((1 - safeDist) * 100);
+        const finalY = basePathY + offsetY + s.pathYOffset;
 
-        el.style.transform = \`translate3d(calc(-50% + \${x + offsetX}px), calc(-50% + \${basePathY + offsetY}px), 0) scale(\${renderScale})\`;
+        el.style.transform = \`translate3d(calc(-50% + \${x + offsetX}px), calc(-50% + \${finalY}px), 0) scale(\${renderScale})\`;
         el.style.filter = blur > 0.5 ? \`blur(\${blur}px)\` : 'none';
         el.style.zIndex = isHovered ? "1000" : zIndex.toString();
+        el.style.opacity = itemProgress.toString();
       });
     };
     gsap.ticker.add(update);
     return () => gsap.ticker.remove(update);
-  }, [hoveredId, settings]);
+  }, []);
 
   return (
-    <div ref={containerRef} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} className="fixed inset-0 z-[100] touch-none select-none">
+    <div ref={containerRef} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} className="fixed inset-0 z-[300] touch-none select-none">
       {IMAGES.map((img, i) => (
-        <WaveItem key={img.id} ref={(el: any) => { itemRefs.current[i] = el; }} image={img} isHovered={hoveredId === img.id} onHover={setHoveredId} introProgress={introProgress} />
+        <WaveItem key={img.id} ref={(el: any) => { itemRefs.current[i] = el; }} image={img} isHovered={hoveredId === img.id} onHover={setHoveredId} settings={settings} />
       ))}
     </div>
   );

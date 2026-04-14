@@ -2,34 +2,31 @@ import React, { forwardRef } from 'react';
 import { motion } from 'motion/react';
 import { PortfolioImage } from '../constants';
 import { cn } from '../lib/utils';
+import { ScrollSettings } from './SettingsPanel';
 
 interface WaveItemProps {
   image: PortfolioImage;
   isHovered: boolean;
   onHover: (id: string | null) => void;
-  introProgress: number; 
+  settings: ScrollSettings;
 }
 
 export const WaveItem = forwardRef<HTMLDivElement, WaveItemProps>(({
   image,
   isHovered,
   onHover,
-  introProgress,
+  settings,
 }, ref) => {
-  const blurAmount = (1 - introProgress) * 20;
-
   return (
     <div
       ref={ref}
       data-wave-item
       data-id={image.id}
       className={cn(
-        "absolute top-1/2 left-1/2 cursor-pointer transition-shadow duration-700",
+        "absolute top-1/2 left-1/2 cursor-pointer",
         isHovered ? "z-[1000]" : ""
       )}
       style={{
-        opacity: introProgress,
-        filter: blurAmount > 0 ? `blur(${blurAmount}px)` : 'none',
         width: 'clamp(50px, 15vw, 70px)',
         height: 'clamp(75px, 22vw, 105px)',
         willChange: 'transform, opacity',
