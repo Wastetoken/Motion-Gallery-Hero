@@ -64,39 +64,40 @@ const Icon = ({ name, size = 20, className = "" }: { name: string, size?: number
 
 // Finalized configuration from user
 const CONFIG = {
-  posX: 0.21,
-  posY: -0.56,
-  posZ: -7.52,
-  rotX: -0.111592653589793,
-  rotY: 2.98840734641021,
-  rotZ: 0.388407346410207,
-  scale: 1.16,
-  sensitivity: 4.01,
-  lerp: 0.684,
+  posX: 1.44,
+  posY: 0.02,
+  posZ: -1.11,
+  rotX: -0.17,
+  rotY: 2.50,
+  rotZ: 0.19,
+  scale: 1.77,
+  sensitivity: 0.13,
+  lerp: 0.04,
   blur: 0,
   opacity: 1,
-  ambientIntensity: 5,
-  spotIntensity: 8.6,
-  spotX: 9.5,
-  spotY: 17,
-  spotZ: 16,
+  ambientIntensity: 0,
+  spotIntensity: 20,
+  spotX: 16,
+  spotY: -1.5,
+  spotZ: -10,
   shadowOpacity: 1,
-  shadowScale: 20,
-  shadowBlur: 1.9
+  shadowScale: 29,
+  shadowBlur: 1.5
 };
 
-const CameraModel = () => {
+const CameraModel = ({ globalMouse }: any) => {
   const { scene } = useGLTF('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/camera.glb');
   const modelRef = useRef<THREE.Group>(null);
-  const { mouse } = useThree();
 
   useFrame(() => {
     if (!modelRef.current) return;
-    const targetRotationX = CONFIG.rotX + (-mouse.y * CONFIG.sensitivity * 0.1);
-    const targetRotationY = CONFIG.rotY + (mouse.x * CONFIG.sensitivity * 0.1);
-    modelRef.current.rotation.x = THREE.MathUtils.lerp(modelRef.current.rotation.x, targetRotationX, CONFIG.lerp * 0.1);
-    modelRef.current.rotation.y = THREE.MathUtils.lerp(modelRef.current.rotation.y, targetRotationY, CONFIG.lerp * 0.1);
-    modelRef.current.rotation.z = THREE.MathUtils.lerp(modelRef.current.rotation.z, CONFIG.rotZ, CONFIG.lerp * 0.1);
+    const mouseX = globalMouse.current.x;
+    const mouseY = globalMouse.current.y;
+    const targetRotationX = CONFIG.rotX + (-mouseY * CONFIG.sensitivity);
+    const targetRotationY = CONFIG.rotY + (mouseX * CONFIG.sensitivity);
+    modelRef.current.rotation.x = THREE.MathUtils.lerp(modelRef.current.rotation.x, targetRotationX, CONFIG.lerp);
+    modelRef.current.rotation.y = THREE.MathUtils.lerp(modelRef.current.rotation.y, targetRotationY, CONFIG.lerp);
+    modelRef.current.rotation.z = THREE.MathUtils.lerp(modelRef.current.rotation.z, CONFIG.rotZ, CONFIG.lerp);
     modelRef.current.position.set(CONFIG.posX, CONFIG.posY, CONFIG.posZ);
   });
 
@@ -108,6 +109,17 @@ const CameraModel = () => {
 };
 
 const CameraScene = () => {
+  const globalMouse = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      globalMouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      globalMouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   return (
     <div className="fixed inset-0 z-[50] pointer-events-none overflow-hidden">
       <div className="w-full h-full" style={{ opacity: CONFIG.opacity, filter: 'blur(' + CONFIG.blur + 'px)' }}>
@@ -116,7 +128,7 @@ const CameraScene = () => {
           <spotLight position={[CONFIG.spotX, CONFIG.spotY, CONFIG.spotZ]} angle={0.15} penumbra={1} intensity={CONFIG.spotIntensity} castShadow />
           <pointLight position={[-10, -10, -10]} intensity={0.5} />
           <React.Suspense fallback={null}>
-            <CameraModel />
+            <CameraModel globalMouse={globalMouse} />
             <ContactShadows position={[0, -2, 0]} opacity={CONFIG.shadowOpacity} scale={CONFIG.shadowScale} blur={CONFIG.shadowBlur} far={4.5} />
             <Environment preset="city" />
           </React.Suspense>

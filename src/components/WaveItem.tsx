@@ -30,8 +30,8 @@ export const WaveItem = forwardRef<HTMLDivElement, WaveItemProps>(({
       style={{
         opacity: introProgress,
         filter: blurAmount > 0 ? `blur(${blurAmount}px)` : 'none',
-        width: '60px',
-        height: '90px',
+        width: 'clamp(50px, 15vw, 70px)',
+        height: 'clamp(75px, 22vw, 105px)',
         willChange: 'transform, opacity',
       }}
       onMouseEnter={() => onHover(image.id)}

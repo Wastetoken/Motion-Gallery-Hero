@@ -29,7 +29,7 @@ const HeroLayout: React.FC<{
         </div>
 
         {/* Main Title */}
-        <h1 className="text-current text-[14vw] md:text-[8vw] font-serif leading-[0.85] md:leading-[0.82] tracking-tighter mb-4 md:mb-10 whitespace-nowrap">
+        <h1 className="text-current text-[12vw] sm:text-[14vw] md:text-[8vw] font-serif leading-[0.85] md:leading-[0.82] tracking-tighter mb-4 md:mb-10 whitespace-nowrap">
           {/* Line 1: Every frame, */}
           <div className="overflow-hidden flex items-baseline">
             <motion.span

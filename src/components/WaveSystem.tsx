@@ -80,20 +80,24 @@ export const WaveSystem: React.FC<WaveSystemProps> = ({ onImageClick, onIntroFin
       }
 
       // 1. Calculate and Render positions
-      const totalWidth = IMAGES.length * settings.spacing;
+      const isMobile = window.innerWidth < 768;
+      const responsiveSpacing = isMobile ? settings.spacing * 0.7 : settings.spacing;
+      const responsiveAmplitude = isMobile ? settings.amplitude * 0.6 : settings.amplitude;
+      
+      const totalWidth = IMAGES.length * responsiveSpacing;
       const halfWidth = window.innerWidth / 2 || 1;
 
       itemRefs.current.forEach((el, index) => {
         if (!el) return;
         
-        const baseX = index * settings.spacing;
+        const baseX = index * responsiveSpacing;
         let x = (baseX - currentPosX.current) % totalWidth;
         if (x < -totalWidth / 2) x += totalWidth;
         if (x > totalWidth / 2) x -= totalWidth;
 
         const angleAtX = settings.frequency * x * Math.PI;
-        const basePathY = settings.amplitude * Math.sin(angleAtX);
-        const slope = settings.amplitude * settings.frequency * Math.PI * Math.cos(angleAtX);
+        const basePathY = responsiveAmplitude * Math.sin(angleAtX);
+        const slope = responsiveAmplitude * settings.frequency * Math.PI * Math.cos(angleAtX);
         const baseRotation = Math.atan(slope) * (180 / Math.PI);
         
         const centerDist = Math.abs(x);

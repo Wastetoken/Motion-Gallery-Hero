@@ -1,4 +1,4 @@
-import React, { useRef, Suspense, useState } from 'react';
+import React, { useRef, Suspense, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, Float, ContactShadows, Environment } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,53 +7,56 @@ const CAMERA_URL = 'https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/camera.g
 
 // Finalized configuration from user
 const CONFIG = {
-  posX: 0.21,
-  posY: -0.56,
-  posZ: -7.52,
-  rotX: -0.111592653589793,
-  rotY: 2.98840734641021,
-  rotZ: 0.388407346410207,
-  scale: 1.16,
-  sensitivity: 4.01,
-  lerp: 0.684,
+  posX: 1.44,
+  posY: 0.02,
+  posZ: -1.11,
+  rotX: -0.17,
+  rotY: 2.50,
+  rotZ: 0.19,
+  scale: 1.77,
+  sensitivity: 0.13,
+  lerp: 0.04,
   blur: 0,
   opacity: 1,
-  ambientIntensity: 5,
-  spotIntensity: 8.6,
-  spotX: 9.5,
-  spotY: 17,
-  spotZ: 16,
+  ambientIntensity: 0,
+  spotIntensity: 20,
+  spotX: 16,
+  spotY: -1.5,
+  spotZ: -10,
   shadowOpacity: 1,
-  shadowScale: 20,
-  shadowBlur: 1.9
+  shadowScale: 29,
+  shadowBlur: 1.5
 };
 
-function CameraModel() {
+function CameraModel({ globalMouse }: { globalMouse: React.MutableRefObject<{ x: number, y: number }> }) {
   const { scene } = useGLTF(CAMERA_URL);
   const modelRef = useRef<THREE.Group>(null);
-  const { mouse } = useThree();
 
   useFrame(() => {
     if (!modelRef.current) return;
 
+    // Use global mouse position since Canvas events are blocked
+    const mouseX = globalMouse.current.x;
+    const mouseY = globalMouse.current.y;
+
     // Smoothly interpolate rotation based on mouse position
-    const targetRotationX = CONFIG.rotX + (-mouse.y * CONFIG.sensitivity * 0.1);
-    const targetRotationY = CONFIG.rotY + (mouse.x * CONFIG.sensitivity * 0.1);
+    const targetRotationX = CONFIG.rotX + (-mouseY * CONFIG.sensitivity);
+    const targetRotationY = CONFIG.rotY + (mouseX * CONFIG.sensitivity);
 
     modelRef.current.rotation.x = THREE.MathUtils.lerp(
       modelRef.current.rotation.x,
       targetRotationX,
-      CONFIG.lerp * 0.1
+      CONFIG.lerp
     );
     modelRef.current.rotation.y = THREE.MathUtils.lerp(
       modelRef.current.rotation.y,
       targetRotationY,
-      CONFIG.lerp * 0.1
+      CONFIG.lerp
     );
     modelRef.current.rotation.z = THREE.MathUtils.lerp(
       modelRef.current.rotation.z,
       CONFIG.rotZ,
-      CONFIG.lerp * 0.1
+      CONFIG.lerp
     );
 
     // Static Position
@@ -61,13 +64,58 @@ function CameraModel() {
   });
 
   return (
-    <group ref={modelRef} dispose={null} scale={CONFIG.scale}>
+    <group ref={modelRef} dispose={null}>
       <primitive object={scene} />
     </group>
   );
 }
 
 export function CameraScene() {
+  // Global mouse tracking since the container has pointer-events-none
+  const globalMouse = useRef({ x: 0, y: 0 });
+  const [responsiveConfig, setResponsiveConfig] = useState({
+    posX: CONFIG.posX,
+    posY: CONFIG.posY,
+    scale: CONFIG.scale
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      
+      if (isMobile) {
+        setResponsiveConfig({
+          // On mobile, center it more or move it to a better spot
+          posX: isPortrait ? 0.5 : 1.0, 
+          posY: isPortrait ? -0.5 : 0.02,
+          scale: isPortrait ? CONFIG.scale * 0.7 : CONFIG.scale * 0.8
+        });
+      } else {
+        setResponsiveConfig({
+          posX: CONFIG.posX,
+          posY: CONFIG.posY,
+          scale: CONFIG.scale
+        });
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // Normalize to -1 to 1
+      globalMouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      globalMouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   return (
     <div className="fixed inset-0 z-[50] pointer-events-none overflow-hidden">
       <div className="w-full h-full" style={{ opacity: CONFIG.opacity, filter: `blur(${CONFIG.blur}px)` }}>
@@ -90,7 +138,9 @@ export function CameraScene() {
           <pointLight position={[-10, -10, -10]} intensity={0.5} />
           
           <Suspense fallback={null}>
-            <CameraModel />
+            <group position={[responsiveConfig.posX, responsiveConfig.posY, CONFIG.posZ]} scale={responsiveConfig.scale}>
+              <CameraModel globalMouse={globalMouse} />
+            </group>
             <ContactShadows
               position={[0, -2, 0]}
               opacity={CONFIG.shadowOpacity}
