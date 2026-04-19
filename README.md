@@ -1,3 +1,4 @@
+A high-fidelity gallery experience with a sinusoidal wave system, progressive intro, and interactive scroll/drag controls.
 
 # Run and deploy your app
 
